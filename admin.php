@@ -48,6 +48,7 @@
  *
  */
 class plugins_slideshow_admin extends db_slideshow{
+    protected $message,$template;
 	/**
 	 * 
 	 * POST
@@ -71,11 +72,17 @@ class plugins_slideshow_admin extends db_slideshow{
 	 * @var $edit
 	 */
 	public $getlang,$action,$edit,$tab,$del_slide,$id;
+    public static $notify = array('plugin'=>'true','template'=>'message-slideshow.tpl','method'=>'display','assignFetch'=>'notifier');
 	/**
 	 * 
 	 * Constructor
 	 */
 	public function __construct(){
+        if(class_exists('backend_model_message')){
+            $this->message = new backend_model_message();
+        }
+        $this->template = new backend_controller_plugins();
+
         if(magixcjquery_filter_request::isGet('getlang')){
             $this->getlang = magixcjquery_filter_isVar::isPostNumeric($_GET['getlang']);
         }
@@ -163,26 +170,34 @@ class plugins_slideshow_admin extends db_slideshow{
     /**
      * @access private
      * Insert une image dans le slide
-     * @param $table
+     * @param $type
      * @param $img_slide
      * @param $confimg
      * @param bool $update
      * @return string
      */
-    private function insert_image_slide($table,$img_slide,$confimg,$update=false){
+    private function uploadImg($type,$img_slide,$confimg,$update=false){
 		if(isset($this->img_slide)){
 			try{
                 $initImg = new backend_model_image();
 				$makeFiles = new magixcjquery_files_makefiles();
 				//Si on demande une modification de l'image
 				if($update == true){
-                    switch($table){
+                    switch($type){
                         case 'root':
-                            $vimage = parent::s_edit_img($this->edit,$table);
+                            $vimage = parent::fetch(array(
+                                'context'   =>  'img',
+                                'type'      =>  $type,
+                                'id'    =>  $this->edit
+                            ));
                             break;
                         case 'category':
                         case 'subcategory':
-                            $vimage = parent::s_edit_img($this->id,$table);
+                            $vimage = parent::fetch(array(
+                                'context'   =>  'img',
+                                'type'      =>  $type,
+                                'id'    =>  $this->id
+                            ));
                             break;
                     }
 
@@ -247,72 +262,68 @@ class plugins_slideshow_admin extends db_slideshow{
     /**
      * @access private
      * Insertion d'un nouveau slide
-     * @param $create
-     * @param $table
+     * @param $data
      */
-    private function add($create,$id,$table){
+    private function add($data){
 		if(isset($this->title_slide)){
-			if(empty($this->title_slide) OR empty($this->img_slide)){
-				$create->display('request/empty_slide.tpl');
-			}else{
-				if(isset($this->img_slide)){
-					$img = $this->insert_image_slide($table,$this->img_slide,'img_slide',false);
-					parent::i_slideshow(
-                        $table,
-						$id,
-						$this->uri_slide, 
-						$img, 
-						$this->title_slide, 
-						$this->desc_slide
-					);
-					$create->display('request/success_add.tpl');
-				}
-			}
+            if(isset($this->img_slide)){
+                $img = $this->uploadImg($data['type'],$this->img_slide,'img_slide',false);
+                parent::insert(
+                    array(
+                        'type'      =>  $data['type'],
+                        'id'	    =>	$data['id'],
+                        'url'	    =>	$this->uri_slide,
+                        'img'	    =>	$img,
+                        'name'	    =>	$this->title_slide,
+                        'content'   =>	$this->desc_slide
+                    )
+                );
+                $this->getLastItemData($data['type']);
+                $this->message->json_post_response(true,'save',$this->template->fetch('loop/items.tpl'),self::$notify);
+            }
 		}
 	}
 
     /**
      * @access private
      * Edition des données du slider
-     * @param $create
-     * @param $id
-     * @param $table
+     * @param $data
      */
-    private function update_data($create,$id,$table){
-        if(empty($this->title_slide)){
-            $create->display('request/empty.tpl');
-        }else{
-            parent::u_slideshow_data(
-                $table,
-                $this->uri_slide,
-                $this->title_slide,
-                $this->desc_slide,
-                $id
+    private function setUpdateData($data){
+        if(isset($this->title_slide)){
+            parent::update(
+                array(
+                    'context'   =>  'data',
+                    'type'      =>  $data['type'],
+                    'id'	    =>	$data['id'],
+                    'url'	    =>	$this->uri_slide,
+                    'name'	    =>	$this->title_slide,
+                    'content'   =>	$this->desc_slide
+                )
             );
-            $create->display('request/success_update.tpl');
+            $this->message->getNotify('update');
         }
     }
 
     /**
      * Save data
-     * @param $create
-     * @param $table
+     * @param $data
      */
-    private function save($create,$id,$table){
-        switch($table){
+    private function save($data){
+        switch($data['type']){
             case 'root':
                 if (isset($this->edit)){
-                    $this->update_data($create,$id,$table);
+                    $this->setUpdateData($data);
                 }else{
-                    $this->add($create,$id,$table);
+                    $this->add($data);
                 }
                 break;
             case 'category':
             case 'subcategory':
                 if (isset($this->id)){
-                    $this->update_data($create,$id,$table);
+                    $this->setUpdateData($data);
                 }else{
-                    $this->add($create,$id,$table);
+                    $this->add($data);
                 }
                 break;
 
@@ -323,28 +334,28 @@ class plugins_slideshow_admin extends db_slideshow{
     /**
      * @access private
      * Edite l'image du slider ou écrase l'image du slider
-     * @param $create
-     * @param $table
+     * @param $data
      */
-    private function update_img($create,$table){
-        if(empty($this->img_slide)){
-            $create->display('request/empty.tpl');
-        }else{
-            switch($table){
+    private function setUpdateImg($data){
+        if(isset($this->img_slide)){
+            switch($data['type']){
                 case 'root':
-                    $img = $this->insert_image_slide($table,$this->img_slide,'img_slide',true);
+                    $img = $this->uploadImg($data['type'],$this->img_slide,'img_slide',true);
                     $id = $this->edit;
                     break;
                 case 'category':
                 case 'subcategory':
-                    $img = $this->insert_image_slide($table,$this->img_slide,'img_slide',true);
+                    $img = $this->uploadImg($data['type'],$this->img_slide,'img_slide',true);
                     $id = $this->id;
                     break;
             }
-            parent::u_slideshow_img(
-                $table,
-                $img,
-                $id
+            parent::update(
+                array(
+                    'context'   =>  'img',
+                    'type'      =>  $data['type'],
+                    'id'	    =>	$data['id'],
+                    'img'	    =>	$img
+                )
             );
         }
     }
@@ -362,57 +373,38 @@ class plugins_slideshow_admin extends db_slideshow{
 
 	/**
 	 * @access private
-	 * Retourne les slideshows sous format JSON
-	 */
-	private function json_slideshow($table){
-        switch($table){
-            case 'root':
-                $query = parent::s_slideshow_data($this->getlang,$table);
-                break;
-            case 'category':
-            case 'subcategory':
-            $query = parent::s_slideshow_data($this->edit,$table);
-                break;
-        }
-        $json = new magixglobal_model_json();
-		if($query != null){
-			foreach ($query as $key){
-				$slide[]= '{"idslide":'.json_encode($key['idslide']).
-				',"uri_slide":'.json_encode($key['uri_slide']).',"img_slide":'.json_encode($this->dir_img_slide($key['img_slide'])).
-				',"title_slide":'.json_encode($key['title_slide']).',"desc_slide":'.json_encode($key['desc_slide']).'}';
-			}
-            $json->encode($slide,array('[',']'));
-		}else{
-            print '{}';
-        }
-	}
-
-	/**
-	 * @access private
 	 * Chargement des données du slideshow
 	 */
-	private function load_data($create,$table){
-        switch($table){
+	private function setData($data){
+        switch($data['type']){
             case 'root':
 
-                $data = parent::s_edit_img($this->edit,$table);
-                $create->assign(
+                $setData = parent::fetch(array(
+                    'context'   =>  'img',
+                    'type'      =>  $data['type'],
+                    'id'    =>  $this->edit
+                ));
+                $this->template->assign(
                     array(
-                        'title_slide'   =>  $data['title_slide'],
-                        'desc_slide'    =>  $data['desc_slide'],
-                        'uri_slide'     =>  $data['uri_slide'],
-                        'header_lang'   =>  $this->slide_language($data['idlang'])
+                        'title_slide'   =>  $setData['title_slide'],
+                        'desc_slide'    =>  $setData['desc_slide'],
+                        'uri_slide'     =>  $setData['uri_slide'],
+                        'header_lang'   =>  $this->slide_language($setData['idlang'])
                     )
                 );
                 break;
             case 'category':
             case 'subcategory':
-                $data = parent::s_edit_img($this->id,$table);
-                $create->assign(
+                $setData = parent::fetch(array(
+                    'context'   =>  'img',
+                    'type'      =>  $data['type'],
+                    'id'    =>  $this->id
+                ));
+                $this->template->assign(
                     array(
-                        'title_slide'   =>  $data['title_slide'],
-                        'desc_slide'    =>  $data['desc_slide'],
-                        'uri_slide'     =>  $data['uri_slide']
+                        'title_slide'   =>  $setData['title_slide'],
+                        'desc_slide'    =>  $setData['desc_slide'],
+                        'uri_slide'     =>  $setData['uri_slide']
                     )
                 );
                 break;
@@ -421,29 +413,92 @@ class plugins_slideshow_admin extends db_slideshow{
 
 
 	}
+    /**
+     * Retourne la liste des records
+     * @param $type integer
+     * @return array
+     */
+    public function setItemsData($type){
+        if($type === 'root'){
+            return parent::fetch(array(
+                'context'   =>  'all',
+                'type'      =>  $type,
+                'id'    =>  $this->getlang
+            ));
+        }elseif($type === 'category' OR $type === 'subcategory'){
+            return parent::fetch(array(
+                'context'   =>  'all',
+                'type'      =>  $type,
+                'id'    =>  $this->edit
+            ));
+        }
+    }
 
+    /**
+     * @param $type
+     */
+    public function getItemsData($type){
+        $data = $this->setItemsData($type);
+        $this->template->assign('getItemsData',$data);
+    }
+
+    /**
+     * Retourne le dernier record
+     * @param $type
+     * @return array
+     */
+    private function setLastItemData($type){
+        if($type === 'root'){
+            return parent::fetch(array(
+                'context'   =>  'last',
+                'type'      =>  $type,
+                'id'    =>  $this->getlang
+            ));
+        }elseif($type === 'category' OR $type === 'subcategory'){
+            return parent::fetch(array(
+                'context'   =>  'last',
+                'type'      =>  $type,
+                'id'    =>  $this->edit
+            ));
+        }
+    }
+    /**
+     * @param $type
+     */
+    private function getLastItemData($type){
+        $data = $this->setLastItemData($type);
+        $this->template->assign('getItemsData',$data);
+    }
     /**
      * @access private
      * Charge les données de l'image du slideshow courant
      */
-	private function json_slider_image($table){
-        switch($table){
+	private function json_slider_image($data){
+        switch($data['type']){
             case 'root':
 
-                $data = parent::s_edit_img($this->edit,$table);
+                $setData = parent::fetch(array(
+                    'context'   =>  'img',
+                    'type'      =>  $data['type'],
+                    'id'    =>  $this->edit
+                ));
                 break;
             case 'category':
             case 'subcategory':
-                $data = parent::s_edit_img($this->id,$table);
+            $setData = parent::fetch(array(
+                    'context'   =>  'img',
+                    'type'      =>  $data['type'],
+                    'id'        =>  $this->id
+                ));
                 break;
 
         }
 
-		if($data['img_slide'] != null){
-			$img = '<a class="img-zoom" title="'.$data['title_slide'].'" href="'.$this->dir_img_slide($data['img_slide']).'">
-			<img class="img-thumbnail" src="'.$this->dir_img_slide('s_'.$data['img_slide']).'" alt="" /></a>';
+		if($setData['img_slide'] != null){
+			$img = '<a class="img-zoom" title="'.$setData['title_slide'].'" href="'.$this->dir_img_slide($setData['img_slide']).'">
+			<img class="img-thumbnail" src="'.$this->dir_img_slide('s_'.$setData['img_slide']).'" alt="" /></a>';
 		}else{
-			$img = '<img data-src="holder.js/140x140/text:Thumbnails" class="img-thumbnail" />';
+			$img = '<img data-src="holder.js/140x140?text=Thumbnail" class="ajax-image img-thumbnail" />';
 		}
 		print $img;
 	}
@@ -454,12 +509,20 @@ class plugins_slideshow_admin extends db_slideshow{
 	 * @access private
 	 *
 	 */
-	public function executeOrderSlider($table){
+	public function executeOrderSlider($data){
 		if(isset($this->sliderorder)){
 			$slides = $this->sliderorder;
             $i = 0;
 			foreach ($slides as $slide) {
-				parent::u_order_slider($table,$i,$slide);
+				//parent::u_order_slider($table,$i,$slide);
+                parent::update(
+                    array(
+                        'context'   =>  'sortable',
+                        'type'      =>  $data['type'],
+                        'id'	    =>	$slide,
+                        'item'	    =>	$i
+                    )
+                );
                 $i++;
 			}
 		}
@@ -468,15 +531,18 @@ class plugins_slideshow_admin extends db_slideshow{
     /**
      * Suppression d'une image + données slider
      * @access private
-     * @param $table
-     * @param $del_slide
+     * @param $data
      * @throws Exception
      */
-    private function delete_slider($table,$del_slide){
-		if(isset($del_slide)){
+    private function removeItem($data){
+		if(isset($this->del_slide)){
 			$makeFiles = new magixcjquery_files_makefiles();
 
-            $vimage = parent::s_edit_img($del_slide,$table);
+            $vimage = parent::fetch(array(
+                'context'   =>  'img',
+                'type'      =>  $data['type'],
+                'id'        =>  $this->del_slide
+            ));
 
 			if(file_exists(self::dir_upload_img().$vimage['img_slide'])){
 				$makeFiles->removeFile(self::dir_upload_img(),$vimage['img_slide']);
@@ -484,7 +550,7 @@ class plugins_slideshow_admin extends db_slideshow{
 			}else{
 				throw new Exception('file: '.$vimage['img_slide'].' is not found');
 			}
-			parent::d_slider($table,$del_slide);
+			parent::d_slider($data['type'],$this->del_slide);
 		}
 	}
 	/**
@@ -497,61 +563,65 @@ class plugins_slideshow_admin extends db_slideshow{
 		//Installation des tables mysql
 		if(self::install_table() == true){
             if(magixcjquery_filter_request::isGet('getlang')){
-				//Ajout d'un élément suivant la langue
-				if(magixcjquery_filter_request::isGet('json_list_records')){
-					$header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
-					$header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
-					$header->pragma();
-					$header->cache_control("nocache");
-					$header->getStatus('200');
-					$header->json_header("UTF-8");
-					$this->json_slideshow('root');
-				}else{
-                    if(isset($this->action)){
-                        if($this->action == 'list'){
-                            if(isset($this->sliderorder)){
-                                $this->executeOrderSlider('root');
-                            }else{
-                                $create->assign('header_lang',$this->slide_language($this->getlang));
-                                $create->display('list.tpl');
-                            }
-                        }elseif($this->action == 'add'){
+                if(isset($this->action)){
+                    if($this->action == 'list'){
+                        if(isset($this->sliderorder)){
+                            $this->executeOrderSlider(array('type'=>'root'));
+                        }else{
+                            $this->getItemsData('root');
+                            $this->template->assign('header_lang',$this->slide_language($this->getlang));
+                            $this->template->display('list.tpl');
+                        }
+                    }elseif($this->action == 'add'){
+                        if(isset($this->title_slide)){
+                            $header->set_json_headers();
+                            $this->save(
+                                array(
+                                    'type'=>'root',
+                                    'id'=>$this->getlang
+                                )
+                            );
+                        }
+                    }elseif($this->action == 'edit'){
+                        if(isset($this->edit) && !isset($_GET['plugin'])){
+                            //Edition des données ou de l'image
                             if(isset($this->title_slide)){
-                                $this->save($create,$this->getlang,'root');
-                            }
-                        }elseif($this->action == 'edit'){
-                            if(isset($this->edit) && !isset($_GET['plugin'])){
-                                //Edition des données ou de l'image
-                                if(isset($this->title_slide)){
-                                    $this->save($create,$this->edit,'root');
-                                }elseif(magixcjquery_filter_request::isGet('jsonimg')){
-                                    $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
-                                    $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
-                                    $header->pragma();
-                                    $header->cache_control("nocache");
-                                    $header->getStatus('200');
-                                    $header->html_header("UTF-8");
-                                    $this->json_slider_image('root');
-                                }elseif($this->img_slide){
-                                    $this->update_img($create,'root');
-                                }else{
-                                    $this->load_data($create,'root');
-                                    $create->display('edit.tpl');
-                                }
-                            }
-                        }elseif($this->action == 'remove'){
-                            if(isset($this->del_slide)){
-                                $this->delete_slider('root',$this->del_slide);
+                                $this->save(
+                                    array(
+                                        'type'=>'root',
+                                        'id'=>$this->edit
+                                    )
+                                );
+                            }elseif(magixcjquery_filter_request::isGet('jsonimg')){
+                                $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
+                                $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
+                                $header->pragma();
+                                $header->cache_control("nocache");
+                                $header->getStatus('200');
+                                $header->html_header("UTF-8");
+                                $this->json_slider_image(array('type'=>'root'));
+                            }elseif($this->img_slide){
+                                $this->setUpdateImg(
+                                    array(
+                                        'type'=>'root',
+                                        'id'=>$this->edit
+                                    )
+                                );
+                            }else{
+                                $this->setData(array('type'=>'root'));
+                                $this->template->display('edit.tpl');
                             }
                         }
-                    }elseif(isset($this->tab)){
-                        $create->display('about.tpl');
+                    }elseif($this->action == 'remove'){
+                        if(isset($this->del_slide)){
+                            $this->removeItem(array('type'=>'root','id'=>$this->del_slide));
+                        }
                     }
-				}
+                }elseif(isset($this->tab)){
+                    $this->template->assign('header_lang',$this->slide_language($this->getlang));
+                    $this->template->display('about.tpl');
+                }
 			}
-		}else{
-			// Retourne la page index.tpl
-			$create->display('index.tpl');
 		}
 	}
 
@@ -575,20 +645,11 @@ class plugins_slideshow_admin extends db_slideshow{
      * @param $edit
      */
     public function catalog_category($plugin,$getlang,$edit){
-        $create = new backend_controller_plugins();
         $header= new magixglobal_model_header();
         $json = new magixglobal_model_json();
         if(isset($_GET['plugin'])){
-            if(magixcjquery_filter_request::isGet('json_list_records')){
-                $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
-                $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
-                $header->pragma();
-                $header->cache_control("nocache");
-                $header->getStatus('200');
-                $header->json_header("UTF-8");
-                $this->json_slideshow('category');
-            }elseif(isset($this->sliderorder)){
-                $this->executeOrderSlider('category');
+            if(isset($this->sliderorder)){
+                $this->executeOrderSlider(array('type'=>'category'));
             }elseif(magixcjquery_filter_request::isGet('jsoncatimg')){
                 $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
                 $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
@@ -596,22 +657,39 @@ class plugins_slideshow_admin extends db_slideshow{
                 $header->cache_control("nocache");
                 $header->getStatus('200');
                 $header->html_header("UTF-8");
-                $this->json_slider_image('category');
+                $this->json_slider_image(array('type'=>'category'));
             }else{
                 if(isset($this->title_slide)){
                     if(isset($this->id)){
-                        $this->save($create,$this->id,'category');
+                        $this->save(
+                            array(
+                                'type'  =>  'category',
+                                'id'    =>  $this->id
+                            )
+                        );
                     }else{
-                        $this->save($create,$this->edit,'category');
+                        $header->set_json_headers();
+                        $this->save(
+                            array(
+                                'type'  =>  'category',
+                                'id'    =>  $this->edit
+                            )
+                        );
                     }
 
                 }elseif($this->img_slide){
-                    $this->update_img($create,'category');
+                    $this->setUpdateImg(
+                        array(
+                            'type'=>'category',
+                            'id'=>$this->id
+                        )
+                    );
                 }elseif(isset($this->del_slide)){
-                    $this->delete_slider('category',$this->del_slide);
+                    $this->removeItem(array('type'=>'category','id'=>$this->del_slide));
                 }else{
-                    $this->load_data($create,'category');
-                    $create->display('catalog-category.tpl');
+                    $this->setData(array('type'=>'category'));
+                    $this->getItemsData('category');
+                    $this->template->display('catalog-category.tpl');
                 }
             }
         }
@@ -624,20 +702,11 @@ class plugins_slideshow_admin extends db_slideshow{
      * @param $edit
      */
     public function catalog_subcategory($plugin,$getlang,$edit){
-        $create = new backend_controller_plugins();
         $header= new magixglobal_model_header();
         $json = new magixglobal_model_json();
         if(isset($_GET['plugin'])){
-            if(magixcjquery_filter_request::isGet('json_list_records')){
-                $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
-                $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
-                $header->pragma();
-                $header->cache_control("nocache");
-                $header->getStatus('200');
-                $header->json_header("UTF-8");
-                $this->json_slideshow('subcategory');
-            }elseif(isset($this->sliderorder)){
-                $this->executeOrderSlider('subcategory');
+            if(isset($this->sliderorder)){
+                $this->executeOrderSlider(array('type'=>'subcategory'));
             }elseif(magixcjquery_filter_request::isGet('jsoncatimg')){
                 $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
                 $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
@@ -645,33 +714,43 @@ class plugins_slideshow_admin extends db_slideshow{
                 $header->cache_control("nocache");
                 $header->getStatus('200');
                 $header->html_header("UTF-8");
-                $this->json_slider_image('subcategory');
+                $this->json_slider_image(array('type'=>'subcategory'));
             }else{
                 if(isset($this->title_slide)){
                     if(isset($this->id)){
-                        $this->save($create,$this->id,'subcategory');
+                        $this->save(
+                            array(
+                                'type'  =>  'subcategory',
+                                'id'    =>  $this->id
+                            )
+                        );
                     }else{
-                        $this->save($create,$this->edit,'subcategory');
+                        $header->set_json_headers();
+                        $this->save(
+                            array(
+                                'type'  =>  'subcategory',
+                                'id'    =>  $this->edit
+                            )
+                        );
                     }
+
                 }elseif($this->img_slide){
-                    $this->update_img($create,'subcategory');
+                    $this->setUpdateImg(
+                        array(
+                            'type'=>'subcategory',
+                            'id'=>$this->id
+                        )
+                    );
                 }elseif(isset($this->del_slide)){
-                    $this->delete_slider('subcategory',$this->del_slide);
+                    $this->removeItem(array('type'=>'subcategory','id'=>$this->del_slide));
                 }else{
-                    $this->load_data($create,'subcategory');
-                    $create->display('catalog-subcategory.tpl');
+                    $this->setData(array('type'=>'subcategory'));
+                    $this->getItemsData('subcategory');
+                    $this->template->display('catalog-subcategory.tpl');
                 }
             }
         }
     }
-    /*public function catalog_product($plugin,$getlang,$edit){
-        $create = new backend_controller_plugins();
-        $header= new magixglobal_model_header();
-        $json = new magixglobal_model_json();
-        if(isset($_GET['plugin'])){
-            $create->display('catalog.tpl');
-        }
-    }*/
 }
 class db_slideshow{
 	/**
@@ -683,227 +762,200 @@ class db_slideshow{
 		$table = 'mc_plugins_slideshow';
 		return magixglobal_model_db::layerDB()->showTable($table);
 	}
-
     /**
-     * @access protected
-     * Retourne les données de l'élément
-     * @param $id
-     * @param $plugin
+     * fetch Data
+     * @param $data
      * @return array
      */
-    protected function s_edit_img($id,$plugin){
-        switch($plugin){
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                break;
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                break;
-        }
-		$sql ='SELECT sl.*
-		FROM '.$table.' AS sl
-		WHERE idslide = :id';
-		return magixglobal_model_db::layerDB()->selectOne($sql,array(
-			':id'=>$id
-		));
-	}
-
-    /**
-     * @access protected
-     * Retourne les éléments suivant le type sélectionné
-     * @param $id
-     * @param $plugin
-     * @return array
-     */
-    protected function s_slideshow_data($id,$plugin){
-        /**
-         * switch table
-         */
-        switch($plugin){
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                $join = '';
-                $where = ' WHERE sl.idclc = :id';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                $join = '';
-                $where = ' WHERE sl.idcls = :id';
-                break;
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                $join = ' JOIN
-		        mc_lang AS lang ON ( sl.idlang = lang.idlang ) ';
-                $where = ' WHERE sl.idlang = :id ';
-                break;
-        }
-		$sql =
-            'SELECT
-              sl.*
-            FROM
-            '.$table.' AS sl
-		    '.$join.'
-		    '.$where.'
-		    ORDER BY
-		      sl.pos_slide
-		';
-		return magixglobal_model_db::layerDB()->select($sql,array(
-            ':id'   =>	$id,
-		));
-	}
-
-    /**
-     * * @access protected
-     * Insertion d'un nouveau slideshow
-     * @param $plugin
-     * @param $id
-     * @param $uri_slide
-     * @param $img_slide
-     * @param $title_slide
-     * @param $desc_slide
-     */
-    protected function i_slideshow($plugin,$id,$uri_slide,$img_slide,$title_slide,$desc_slide){
-        /**
-         * switch table
-         */
-        switch($plugin){
-
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                $column = 'idlang';
-                break;
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                $column = 'idclc';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                $column = 'idcls';
-                break;
-        }
-		$sql = 'INSERT INTO
-		'.$table.'
-		('.$column.',uri_slide,img_slide,title_slide,desc_slide)
-		VALUE(:id,:uri_slide,:img_slide,:title_slide,:desc_slide)';
-
-		magixglobal_model_db::layerDB()->insert($sql,array(
-			':id'		    =>	$id,
-			':uri_slide'	=>	$uri_slide,
-			':img_slide'	=>	$img_slide,
-			':title_slide'	=>	$title_slide,
-			':desc_slide'	=>	$desc_slide
-		));
-	}
-
-    /**
-     * @access protected
-     * Edite les données d'un élément
-     * @param $plugin
-     * @param $uri_slide
-     * @param $title_slide
-     * @param $desc_slide
-     * @param $edit
-     */
-    protected function u_slideshow_data($plugin,$uri_slide,$title_slide,$desc_slide,$edit){
-        /**
-         * switch table
-         */
-        switch($plugin){
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                break;
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                break;
-        }
-		$sql =
-            'UPDATE
-                '.$table.'
-            SET
-              uri_slide     =   :uri_slide,
-              title_slide   =   :title_slide,
-              desc_slide    =   :desc_slide
-		    WHERE
-		    idslide = :edit';
-
-		magixglobal_model_db::layerDB()->update($sql,array(
-			':uri_slide'	=>	$uri_slide,
-			':title_slide'	=>	$title_slide,
-			':desc_slide'	=>	$desc_slide,
-			':edit'         =>  $edit
-		));
-	}
-
-    /**
-     * @access protected
-     * Modifie le nom de l'image de l'élément
-     * @param $plugin
-     * @param $img_slide
-     * @param $id
-     */
-    protected function u_slideshow_img($plugin,$img_slide,$id){
-        switch($plugin){
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                break;
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                break;
-        }
-		$sql = 'UPDATE '.$table.'
-		SET img_slide=:img_slide
-		WHERE idslide = :id';
-		magixglobal_model_db::layerDB()->update($sql,array(
-			':img_slide'	=>	$img_slide,
-			':id'=>$id
-		));
-	}
-
-    /**
-     * @access protected
-     * Met à jour l'ordre d'affichage des sliders
-     * @param $plugin
-     * @param $i
-     * @param $id
-     */
-    protected function u_order_slider($plugin,$i,$id)
+    protected function fetch($data)
     {
-        /**
-         * switch table
-         */
-        switch($plugin){
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                break;
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                break;
+        if (is_array($data)) {
+            if ($data['context'] === 'all') {
+                switch($data['type']){
+                    case 'category':
+                        $table = 'mc_plugins_slideshow_category';
+                        $join = '';
+                        $where = ' WHERE sl.idclc = :id';
+                        break;
+                    case 'subcategory':
+                        $table = 'mc_plugins_slideshow_subcategory';
+                        $join = '';
+                        $where = ' WHERE sl.idcls = :id';
+                        break;
+                    case 'root':
+                        $table = 'mc_plugins_slideshow';
+                        $join = ' JOIN mc_lang AS lang ON ( sl.idlang = lang.idlang ) ';
+                        $where = ' WHERE sl.idlang = :id ';
+                        break;
+                }
+                $sql =
+                    'SELECT sl.* FROM '.$table.' AS sl '.$join.' '.$where.'
+                        ORDER BY sl.pos_slide';
+                return magixglobal_model_db::layerDB()->select($sql,array(
+                    ':id'   =>	$data['id'],
+                ));
+            }elseif($data['context'] === 'last'){
+                switch($data['type']){
+                    case 'category':
+                        $table = 'mc_plugins_slideshow_category';
+                        $join = '';
+                        $where = ' WHERE sl.idclc = :id ORDER BY sl.idslide DESC LIMIT 0,1';
+                        break;
+                    case 'subcategory':
+                        $table = 'mc_plugins_slideshow_subcategory';
+                        $join = '';
+                        $where = ' WHERE sl.idcls = :id ORDER BY sl.idslide DESC LIMIT 0,1';
+                        break;
+                    case 'root':
+                        $table = 'mc_plugins_slideshow';
+                        $join = ' JOIN mc_lang AS lang ON ( sl.idlang = lang.idlang ) ';
+                        $where = ' WHERE sl.idlang = :id ORDER BY sl.idslide DESC LIMIT 0,1';
+                        break;
+                }
+                $sql =
+                    'SELECT sl.* FROM '.$table.' AS sl '.$join.' '.$where;
+                return magixglobal_model_db::layerDB()->select($sql,array(
+                    ':id'   =>	$data['id']
+                ));
+            }elseif ($data['context'] === 'img') {
+                switch($data['type']){
+                    case 'root':
+                        $table = 'mc_plugins_slideshow';
+                        break;
+                    case 'category':
+                        $table = 'mc_plugins_slideshow_category';
+                        break;
+                    case 'subcategory':
+                        $table = 'mc_plugins_slideshow_subcategory';
+                        break;
+                }
+                $sql ='SELECT sl.*
+                    FROM '.$table.' AS sl
+                    WHERE idslide = :id';
+                return magixglobal_model_db::layerDB()->selectOne($sql,array(
+                    ':id'   =>	$data['id']
+                ));
+            }
         }
-		$sql = 'UPDATE
+    }
+    /**
+     * Ajoute un enregistrement
+     * @param $data
+     */
+    protected function insert($data){
+        if(is_array($data)) {
+            switch($data['type']){
+                case 'root':
+                    $table = 'mc_plugins_slideshow';
+                    $column = 'idlang';
+                    break;
+                case 'category':
+                    $table = 'mc_plugins_slideshow_category';
+                    $column = 'idclc';
+                    break;
+                case 'subcategory':
+                    $table = 'mc_plugins_slideshow_subcategory';
+                    $column = 'idcls';
+                    break;
+            }
+
+            $sql = 'INSERT INTO
+                '.$table.'
+                ('.$column.',uri_slide,img_slide,title_slide,desc_slide)
+                VALUE(:id,:uri_slide,:img_slide,:title_slide,:desc_slide)';
+            magixglobal_model_db::layerDB()->insert($sql,array(
+                ':id'		    =>	$data['id'],
+                ':uri_slide'	=>	$data['url'],
+                ':img_slide'	=>	$data['img'],
+                ':title_slide'	=>	$data['name'],
+                ':desc_slide'	=>	$data['content']
+            ));
+        }
+    }
+    /**
+     * Ajoute un enregistrement
+     * @param $data
+     */
+    protected function update($data)
+    {
+        if (is_array($data)) {
+            if ($data['context'] === 'data') {
+                switch($data['type']){
+                    case 'root':
+                        $table = 'mc_plugins_slideshow';
+                        break;
+                    case 'category':
+                        $table = 'mc_plugins_slideshow_category';
+                        break;
+                    case 'subcategory':
+                        $table = 'mc_plugins_slideshow_subcategory';
+                        break;
+                }
+                $sql =
+                    'UPDATE
+                '.$table.'
+                    SET
+                      uri_slide     =   :uri_slide,
+                      title_slide   =   :title_slide,
+                      desc_slide    =   :desc_slide
+                    WHERE
+                    idslide = :id';
+
+                magixglobal_model_db::layerDB()->update($sql,array(
+                    ':id'	        =>	$data['id'],
+                    ':uri_slide'	=>	$data['url'],
+                    ':title_slide'	=>	$data['name'],
+                    ':desc_slide'	=>	$data['content']
+                ));
+            }elseif ($data['context'] === 'img') {
+                switch($data['type']){
+                    case 'category':
+                        $table = 'mc_plugins_slideshow_category';
+                        break;
+                    case 'root':
+                        $table = 'mc_plugins_slideshow';
+                        break;
+                    case 'subcategory':
+                        $table = 'mc_plugins_slideshow_subcategory';
+                        break;
+                }
+                $sql = 'UPDATE '.$table.'
+                    SET img_slide=:img_slide
+                    WHERE idslide = :id';
+                magixglobal_model_db::layerDB()->update($sql,array(
+                    ':img_slide'	=>	$data['img'],
+                    ':id'		    =>	$data['id']
+                ));
+            }elseif ($data['context'] === 'sortable') {
+                /**
+                 * switch table
+                 */
+                switch($data['type']){
+                    case 'category':
+                        $table = 'mc_plugins_slideshow_category';
+                        break;
+                    case 'root':
+                        $table = 'mc_plugins_slideshow';
+                        break;
+                    case 'subcategory':
+                        $table = 'mc_plugins_slideshow_subcategory';
+                        break;
+                }
+                $sql = 'UPDATE
 		            '.$table.'
 		       SET
     		       pos_slide = :i
 		       WHERE
 		        idslide = :id';
-		magixglobal_model_db::layerDB()->update($sql,
-			array(
-                ':i'=>$i,
-                ':id'=>$id
-			)
-		);
-	}
+                magixglobal_model_db::layerDB()->update($sql,
+                    array(
+                        ':i'    =>  $data['item'],
+                        ':id'   =>	$data['id']
+                    )
+                );
+            }
+        }
+    }
 
     /**
      * @access protected

@@ -4,7 +4,6 @@
     {assign var="reference" value="root"}
     {include file="section/nav.tpl"}
     <h1>
-        <img src="/{$pluginPath}/icon.png" alt="{$pluginName}" width="16" height="16" />
         {$pluginName|ucfirst}
         <small>
             Modifier l'image {$title_slide}

@@ -3,7 +3,6 @@
 {block name="article:content"}
     {include file="section/nav.tpl"}
     <h1>
-        <img src="/{$pluginPath}/icon.png" alt="{$pluginName}" width="16" height="16" />
         {$pluginName|ucfirst}
         <small>
             Gestion des images en {$header_lang}

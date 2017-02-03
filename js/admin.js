@@ -12,28 +12,6 @@
  */
 var MC_SlideShow = (function($, window, document, undefined){
     /**
-     * set url construct for array HTML
-     * @param type
-     * @param baseadmin
-     * @param getlang
-     * @param iso
-     * @param edit
-     * @returns {string}
-     */
-    function setUrlConstruct(type,baseadmin,getlang,iso,edit){
-        switch(type){
-            case 'root':
-                return '/'+baseadmin+'/plugins.php?name=slideshow&getlang='+getlang+'&action=edit&edit=';
-                break;
-            case 'category':
-                return '/'+baseadmin+'/catalog.php?section=category&getlang='+getlang+'&action=edit&edit='+edit+'&plugin=slideshow&id=';
-                break;
-            case 'subcategory':
-                return '/'+baseadmin+'/catalog.php?section=subcategory&getlang='+getlang+'&action=edit&edit='+edit+'&plugin=slideshow&id=';
-                break;
-        }
-    }
-    /**
      * set ajax load data
      * @param type
      * @param baseadmin
@@ -41,7 +19,12 @@ var MC_SlideShow = (function($, window, document, undefined){
      * @param edit
      * @returns {string}
      */
-    function setAjaxUrlLoad(type,baseadmin,getlang,iso,edit){
+    function setAjaxUrlLoad(collection){
+        var type = collection['type'];
+        var baseadmin = collection['baseadmin'];
+        var getlang = collection['getlang'];
+        var edit = collection['edit'];
+        var iso = collection['iso'];
         switch(type){
             case 'root':
                 return '/'+baseadmin+'/plugins.php?name=slideshow&getlang='+getlang;
@@ -57,14 +40,17 @@ var MC_SlideShow = (function($, window, document, undefined){
 
     /**
      * get ajax action
-     * @param type
-     * @param baseadmin
-     * @param getlang
-     * @param edit
-     * @param action
+     * @param collection
      * @returns {string}
      */
-    function setAjaxUrlAction(type,baseadmin,getlang,iso,edit,action){
+    function setAjaxUrlAction(collection){
+        var type = collection['type'];
+        var baseadmin = collection['baseadmin'];
+        var getlang = collection['getlang'];
+        var edit = collection['edit'];
+        var action = collection['action'];
+        var iso = collection['iso'];
+
         switch(type){
             case 'root':
                 if(action === 'add'){
@@ -85,280 +71,20 @@ var MC_SlideShow = (function($, window, document, undefined){
     }
 
     /**
-     * HTML Table
-     * @param collection
-     * @param data
-     * @param contener
-     */
-    function setHtmlData(collection,type,data,contener){
-        var getAjaxSortable;
-        var editUrl = setUrlConstruct.call(this,type,baseadmin,getlang,iso,edit);
-        var geturl = setAjaxUrlLoad.call(this,type,baseadmin,getlang,iso,edit);
-        var tblListing = $(document.createElement('table')),
-            tbody = $(document.createElement('tbody'));
-        tblListing
-            .addClass("table table-bordered table-condensed table-hover")
-            .attr("id", "table_slider")
-            .append(
-                $(document.createElement("thead"))
-                    .append(
-                        $(document.createElement("tr"))
-                            .append(
-                                $(document.createElement("th")).append("ID"),
-                                $(document.createElement("th")).append("Title"),
-                                $(document.createElement("th")).append("Image"),
-                                $(document.createElement("th")).append("URL"),
-                                $(document.createElement("th")).append("Description"),
-                                $(document.createElement("th")).append(
-                                    $(document.createElement("span"))
-                                        .addClass("fa fa-edit")
-                                ),
-                                $(document.createElement("th"))
-                                    .append(
-                                        $(document.createElement("span"))
-                                            .addClass("fa fa-trash-o")
-                                )
-                            )
-                    ),
-                tbody
-            );
-        tblListing.appendTo(contener);
-        if(data === undefined){
-            console.log(data);
-        }
-        if(data !== null){
-            $.each(data, function(i,item) {
-                tbody.append(
-                    $(document.createElement("tr"))
-                        .attr("id","sliderorder_"+item.idslide)
-                        .append(
-                            $(document.createElement("td")).append(item.idslide),
-                            $(document.createElement("td")).append(
-                                $(document.createElement("a"))
-                                    .attr("href", editUrl+item.idslide)
-                                    .attr("title", "Edit")
-                                    .append(item.title_slide)
-                            ),
-                            $(document.createElement("td")).append(
-                                $(document.createElement("a"))
-                                    .attr("href", item.img_slide)
-                                    .addClass('img-zoom')
-                                    .append(
-                                        $(document.createElement("span")).addClass("fa fa-search-plus")
-                                    )
-                                    .append(
-                                        ' Preview'
-                                    )
-                            ),
-                            $(document.createElement("td")).append(item.uri_slide),
-                            $(document.createElement("td")).append(item.desc_slide),
-                            $(document.createElement("td")).append(
-                                $(document.createElement("a"))
-                                    .attr("href", editUrl+item.idslide)
-                                    .attr("title", "Edit")
-                                    .append(
-                                        $(document.createElement("span"))
-                                            .addClass("fa fa-edit")
-                                    )
-                            ),
-                            $(document.createElement("td")).append(
-                                $(document.createElement("a"))
-                                    .addClass("d-plugin-slide")
-                                    .attr("href", "#")
-                                    .attr("data-delete", item.idslide)
-                                    .attr("title", "Remove")
-                                    .append(
-                                        $(document.createElement("span")).addClass("fa fa-trash-o")
-                                    )
-                            )
-                        )
-                )
-            });
-            switch(type){
-                case 'root':
-                    getAjaxSortable = geturl+'&action=list';
-                    break;
-                case 'category':
-                    getAjaxSortable = geturl;
-                    break;
-            }
-            $('#table_slider > tbody').sortable({
-                items: "> tr",
-                placeholder: "ui-state-highlight",
-                cursor: "move",
-                axis: "y",
-                update : function() {
-                    var serial = $('#table_slider > tbody').sortable('serialize');
-                    $.nicenotify({
-                        ntype: "ajax",
-                        uri: getAjaxSortable,
-                        typesend: 'post',
-                        noticedata : serial,
-                        successParams:function(e){
-                            $.nicenotify.initbox(e,{
-                                display:false
-                            });
-                        }
-                    });
-                }
-            });
-            $('#table_slider > tbody').disableSelection();
-            $(".img-zoom").fancybox();
-        }else{
-            tbody.append(
-                $(document.createElement("tr"))
-                    .append(
-                        $(document.createElement("td")).append(
-                            $(document.createElement("span")).addClass("fa fa-minus")
-                        ),
-                        $(document.createElement("td")).append(
-                            $(document.createElement("span")).addClass("fa fa-minus")
-                        ),
-                        $(document.createElement("td")).append(
-                            $(document.createElement("span")).addClass("fa fa-minus")
-                        ),
-                        $(document.createElement("td")).append(
-                            $(document.createElement("span")).addClass("fa fa-minus")
-                        )
-                    )
-            )
-        }
-    }
-    
-    /**
-     * Retourne le tableau html suivant l'identifiant
-     * @param data
-     * @param id
-     * @returns {*}
-     */
-    function setTableData(collection,type,data){
-        var contener = '#list-slideshow-data';
-        switch(type){
-            case 'root':
-                return setHtmlData(collection,type,data,contener);
-                break;
-            case 'category':
-            case 'subcategory':
-                return setHtmlData(collection,type,data,contener);
-                break;
-        }
-    }
-
-    /**
-     * Requête Json pour les données utilisant le formatage de tableau
-     * @param id
-     */
-    function getTableData(collection,type){
-        var contener = '#list-slideshow-data';
-        var json_url = 'json_list_records';
-        //collection.unshift(type);
-        var geturl = setAjaxUrlLoad.call(this,type,baseadmin,getlang,iso,edit);
-
-        /*console.log(collection);
-        var test = collection.push("test");
-        console.log(test.join(", "));*/
-        $.nicenotify({
-            ntype: "ajax",
-            uri: geturl+'&'+json_url+'=true',
-            typesend: 'get',
-            dataType: 'json',
-            beforeParams:function(){
-                var loader = $(document.createElement("span")).addClass("loader offset5").append(
-                    $(document.createElement("img"))
-                        .attr('src','/'+collection[0]+'/template/img/loader/small_loading.gif')
-                        .attr('width','20px')
-                        .attr('height','20px')
-                )
-                $(contener).html(loader);
-            },
-            successParams:function(data){
-                $(contener).empty();
-                $.nicenotify.initbox(data,{
-                    display:false
-                });
-                setTableData(collection,type,data);
-            }
-        });
-    }
-
-    /**
-     * Add new record
-     * @param collection
-     * @param type
-     */
-    function add(collection,type){
-        var geturl = setAjaxUrlAction.call(this,type,baseadmin,getlang,'',edit,'add');
-
-        var formsAdd = $("#forms_plugins_slideshow_add").validate({
-            onsubmit: true,
-            event: 'submit',
-            rules: {
-                title_slide: {
-                    required: true,
-                    minlength: 2
-                },
-                img_slide: {
-                    required: true,
-                    minlength: 1,
-                    accept: "(jpe?g|gif|png|JPE?G|GIF|PNG)"
-                }
-            },
-            submitHandler: function(form) {
-                $.nicenotify({
-                    ntype: "submit",
-                    uri: geturl,
-                    typesend: 'post',
-                    idforms: $(form),
-                    resetform: true,
-                    beforeParams:function(){},
-                    successParams:function(e){
-                        $.nicenotify.initbox(e,{
-                            display:true
-                        });
-                        $('#forms-add').dialog('close');
-                        getTableData(collection,type);
-                    }
-                });
-                return false;
-            }
-        });
-        $(document).on('click','#open-add',function(){
-            $('#forms-add').dialog({
-                modal: true,
-                resizable: true,
-                width: 400,
-                height:'auto',
-                minHeight: 210,
-                buttons: {
-                    'Save': function() {
-                        $("#forms_plugins_slideshow_add").submit();
-                    },
-                    Cancel: function() {
-                        $(this).dialog('close');
-                        formsAdd.resetForm();
-                    }
-                }
-            });
-            return false;
-        });
-    }
-
-    /**
      * Load image record
      * @param collection
      * @param type
      */
-    function getImage(collection,type){
+    function getImage(collection){
         var getImg,
-            geturl = setAjaxUrlAction.call(this,type,baseadmin,getlang,iso,edit,'edit');
-
-        switch(type){
+            geturl = setAjaxUrlAction.call(this,collection);
+        switch(collection['type']){
             case 'root':
                 getImg = '&'+'jsonimg=true';
                     break;
             case 'category':
             case 'subcategory':
-                getImg = '&id='+collection[4]+'&'+'jsoncatimg=true';
+                getImg = '&id='+collection['id']+'&'+'jsoncatimg=true';
                 break;
         }
         $.nicenotify({
@@ -376,127 +102,225 @@ var MC_SlideShow = (function($, window, document, undefined){
         });
     }
 
-    /**
-     * Update Record
-     * @param collection
-     * @param type
-     */
-    function update(collection,type){
-        //console.log(collection);
-        var geturl = setAjaxUrlAction.call(this,type,baseadmin,getlang,iso,edit,'edit');
-        switch(type){
-            case 'root':
-                getParams = '';
-                break;
-            case 'category':
-            case 'subcategory':
-                getParams = '&id='+collection[4];
-                break;
-        }
-        // Validate data forms
-        $("#forms-plugins-slideshow-udata").validate({
+    function del(collection) {
+        var geturl = setAjaxUrlAction.call(this,collection);
+        // *** Set required fields for validation
+        //alert(geturl);
+        $(collection['form']).validate({
             onsubmit: true,
             event: 'submit',
             rules: {
-                title_slide: {
+                delete: {
                     required: true,
-                    minlength: 2
+                    number: true,
+                    minlength: 1
                 }
             },
-            submitHandler: function(form) {
+            submitHandler: function (form) {
                 $.nicenotify({
                     ntype: "submit",
-                    uri: geturl+getParams,
+                    uri: geturl,
                     typesend: 'post',
                     idforms: $(form),
-                    successParams:function(e){
-                        $.nicenotify.initbox(e,{
-                            display:true
+                    resetform: true,
+                    successParams: function (data) {
+                        $(collection['modal']).modal('hide');
+                        window.setTimeout(function () {
+                            $(".alert-success").alert('close');
+                        }, 4000);
+                        $.nicenotify.initbox(data, {
+                            display: true
                         });
-                    }
-                });
-                return false;
-            }
-        });
-        // Validate update img
-        $("#forms-plugins-slideshow-uimg").validate({
-            onsubmit: true,
-            event: 'submit',
-            rules: {
-                img_slide: {
-                    required: true,
-                    minlength: 1,
-                    accept: "(jpe?g|gif|png|JPE?G|GIF|PNG)"
-                }
-            },
-            submitHandler: function(form) {
-                $.nicenotify({
-                    ntype: "submit",
-                    uri: geturl+getParams,
-                    typesend: 'post',
-                    idforms: $(form),
-                    beforeParams:function(){
-                        var loader = $(document.createElement("span")).addClass("loader offset5").append(
-                            $(document.createElement("img"))
-                                .attr('src','/'+collection[0]+'/template/img/loader/small_loading.gif')
-                                .attr('width','20px')
-                                .attr('height','20px')
-                        );
-                        $('#plugins_load_img #contener_image').html(loader);
-                    },
-                    successParams:function(e){
-                        $.nicenotify.initbox(e,{
-                            display:false
-                        });
-                        $('#img_slide:file').val('');
-                        getImage(collection,type);
+                        $('#sliderorder_' + $('#delete').val()).remove();
+                        updateList();
                     }
                 });
                 return false;
             }
         });
     }
-
-    /**
-     * Remove record
-     * @param collection
-     * @param type
-     */
-    function remove(collection,type){
-        var geturl = setAjaxUrlAction.call(this,type,baseadmin,getlang,iso,edit,'remove');
-        $(document).on('click','.d-plugin-slide',function (event){
-            event.preventDefault();
-            var elem = $(this).data("delete");
-            $("#window-dialog:ui-dialog").dialog( "destroy" );
-            $('#window-dialog').dialog({
-                bgiframe: true,
-                resizable: false,
-                height:140,
-                modal: true,
-                title: Globalize.localize( "delete_item", collection[2] ),
-                buttons: {
-                    'Delete item': function() {
-                        $(this).dialog('close');
+    function save(collection){
+        switch(collection['action']){
+            case 'edit':
+                var geturl = setAjaxUrlAction.call(this,collection);
+                switch(collection['type']){
+                    case 'root':
+                        var getParams = '';
+                        break;
+                    case 'category':
+                    case 'subcategory':
+                        var getParams = '&id='+collection['id'];
+                        break;
+                }
+                if(collection['save'] === 'data'){
+                    // Validate data forms
+                    $(collection['form']).validate({
+                        onsubmit: true,
+                        event: 'submit',
+                        rules: {
+                            title_slide: {
+                                required: true,
+                                minlength: 2
+                            }
+                        },
+                        submitHandler: function(form) {
+                            $.nicenotify({
+                                ntype: "submit",
+                                uri: geturl+getParams,
+                                typesend: 'post',
+                                idforms: $(form),
+                                successParams:function(data){
+                                    window.setTimeout(function() { $(".alert-success").alert('close'); }, 4000);
+                                    $.nicenotify.initbox(data,{
+                                        display:true
+                                    });
+                                }
+                            });
+                            return false;
+                        }
+                    });
+                }else if(collection['save'] === 'img'){
+                    // Validate update img
+                    $(collection['form']).validate({
+                        onsubmit: true,
+                        event: 'submit',
+                        rules: {
+                            img_slide: {
+                                required: true,
+                                minlength: 1,
+                                accept: "(jpe?g|gif|png|JPE?G|GIF|PNG)"
+                            }
+                        },
+                        submitHandler: function(form) {
+                            $.nicenotify({
+                                ntype: "submit",
+                                uri: geturl+getParams,
+                                typesend: 'post',
+                                idforms: $(form),
+                                beforeParams:function(){
+                                    var loader = $(document.createElement("span")).addClass("loader offset5").append(
+                                        $(document.createElement("img"))
+                                            .attr('src','/'+collection['baseadmin']+'/template/img/loader/small_loading.gif')
+                                            .attr('width','20px')
+                                            .attr('height','20px')
+                                    );
+                                    $('#plugins_load_img #contener_image').html(loader);
+                                },
+                                successParams:function(e){
+                                    $.nicenotify.initbox(e,{
+                                        display:false
+                                    });
+                                    $('#img_slide:file').val('');
+                                    getImage(collection);
+                                }
+                            });
+                            return false;
+                        }
+                    });
+                }
+                break;
+            case 'add':
+                var geturl = setAjaxUrlAction.call(this,collection);
+                //alert(geturl);
+                //#forms_plugins_slideshow_add
+                $(collection['form']).validate({
+                    onsubmit: true,
+                    event: 'submit',
+                    rules: {
+                        title_slide: {
+                            required: true,
+                            minlength: 2
+                        },
+                        img_slide: {
+                            required: true,
+                            minlength: 1,
+                            accept: "(jpe?g|gif|png|JPE?G|GIF|PNG)"
+                        }
+                    },
+                    submitHandler: function(form) {
                         $.nicenotify({
-                            ntype: "ajax",
+                            ntype: "submit",
                             uri: geturl,
                             typesend: 'post',
-                            noticedata : {del_slide:elem},
+                            idforms: $(form),
+                            resetform: true,
+                            datatype: 'json',
                             beforeParams:function(){},
-                            successParams:function(e){
-                                $.nicenotify.initbox(e,{
-                                    display:false
+                            successParams:function(data){
+                                $(collection['modal']).modal('hide');
+                                window.setTimeout(function() { $(".alert-success").alert('close'); }, 4000);
+                                $.nicenotify.initbox(data.notify,{
+                                    display:true
                                 });
-                                getTableData(collection,type);
+                                if(data.statut && data.result != null) {
+                                    $('#no-entry').before(data.result);
+                                    updateList();
+                                }
                             }
                         });
-                    },
-                    Cancel: function() {
-                        $(this).dialog('close');
+                        return false;
                     }
+                });
+                break;
+        }
+    }
+    /**
+     * Update List
+     * @param type
+     */
+    function updateList() {
+        var rows = $('#list_page tr');
+        if (rows.length > 1) {
+            $('#no-entry').addClass('hide');
+
+            $('a.toggleModal').off();
+            $('a.toggleModal').click(function () {
+                if ($(this).attr('href') != '#') {
+                    var id = $(this).attr('href').slice(1);
+                    $('#delete').val(id);
                 }
             });
+        } else {
+            $('#no-entry').removeClass('hide');
+        }
+    }
+
+    /**
+     * Sortable items
+     * @param collection
+     */
+    function itemSortable(collection){
+        var geturl = setAjaxUrlLoad.call(this,collection);
+        switch(collection['type']){
+            case 'root':
+                getAjaxSortable = geturl+'&action=list';
+                break;
+            case 'category':
+                getAjaxSortable = geturl;
+                break;
+        }
+        $( ".ui-sortable" ).sortable({
+            items: "> tr",
+            placeholder: "ui-state-highlight",
+            cursor: "move",
+            axis: "y",
+            update : function() {
+                var serial = $( ".ui-sortable" ).sortable('serialize');
+                $.nicenotify({
+                    ntype: "ajax",
+                    uri: getAjaxSortable,
+                    typesend: 'post',
+                    noticedata : serial,
+                    successParams:function(e){
+                        $.nicenotify.initbox(e,{
+                            display:false
+                        });
+                    }
+                });
+            }
         });
+        $( ".ui-sortable" ).disableSelection();
+        $(".img-zoom").fancybox();
     }
     return {
         //Fonction Public
@@ -506,15 +330,11 @@ var MC_SlideShow = (function($, window, document, undefined){
             }else if($('.list-slideshow-data').length != 0){
                 var type = $('.forms-slideshow-data').attr("data-forms");
             }
-            var collection = new Array(baseadmin,getlang,iso,edit);
-            if($.isArray(collection)){
-                //collection.push(type);
-                add(collection,type);
-                remove(collection,type);
-                getTableData(collection,type);
-            }else{
-                console.log('Collection is not array : run');
-            }
+            //if($.isPlainObject(newCollection)){}
+            save({baseadmin:baseadmin, getlang:getlang, action:'add', edit: edit, type:type, form:'#forms_plugins_slideshow_add', modal: '#add-page'});
+            del({baseadmin:baseadmin, getlang:getlang, action:'remove', type:type, form:'#del_img', modal: '#deleteModal'});
+            itemSortable({baseadmin:baseadmin, getlang:getlang, type:type, edit: edit});
+            updateList();
         },
         runEdit:function(baseadmin,getlang,iso,edit,id){
             if($('.list-slideshow-data').length != 0){
@@ -522,16 +342,10 @@ var MC_SlideShow = (function($, window, document, undefined){
             }else if($('.forms-slideshow-data').length != 0){
                 var type = $('.forms-slideshow-data').attr("data-forms");
             }
-            var collection = new Array(baseadmin,getlang,iso,edit,id);
 
-            if($.isArray(collection)){
-                //collection.push(type);
-                //console.log(collection);
-                getImage(collection,type);
-                update(collection,type);
-            }else{
-                console.log('Collection is not array : runEdit');
-            }
+            getImage({baseadmin:baseadmin, getlang:getlang, action:'edit', type:type, edit: edit, id:id});
+            save({baseadmin:baseadmin, getlang:getlang, action:'edit', type:type,edit: edit, id:id, form:'#forms-plugins-slideshow-udata', save: 'data'});
+            save({baseadmin:baseadmin, getlang:getlang, action:'edit', type:type,edit: edit, id:id, form:'#forms-plugins-slideshow-uimg', save: 'img'});
         }
     }
 })(jQuery, window, document);

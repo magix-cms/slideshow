@@ -96,7 +96,7 @@ class db_slideshow{
 		';
         return magixglobal_model_db::layerDB()->select($sql,array(
             ':id'   =>	$id,
-        ),'assoc,true,true');
+        ));
     }
 }
 ?>

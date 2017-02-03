@@ -1,4 +1,4 @@
-<div class="col-lg-6 col-sm-6">
+<div class="col-lg-12 col-sm-12">
     <h2>
         Informations de l'image
     </h2>
@@ -13,14 +13,14 @@
         </div>
         <div class="form-group">
             <label for="desc_slide">Description :</label>
-            <textarea id="desc_slide" name="desc_slide" cols="65" rows="3" class="fulltext">{$desc_slide}</textarea>
+            <textarea id="desc_slide" name="desc_slide" cols="65" rows="3" class="form-control">{$desc_slide}</textarea>
         </div>
         <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="{#send#|ucfirst}" />
+            <input type="submit" class="btn btn-primary" value="{#save#|ucfirst}" />
         </div>
     </form>
 </div>
-<div class="col-lg-5 col-sm-5">
+<div class="col-lg-12 col-sm-12">
     <h2>
         Remplacer l'image
     </h2>
@@ -31,7 +31,7 @@
             <input type="hidden" name="MAX_FILE_SIZE" value="2048576" />
         </div>
         <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="{#send#|ucfirst}" />
+            <input type="submit" class="btn btn-primary" value="{#save#|ucfirst}" />
         </div>
     </form>
     <div id="slideshow_load_img">

@@ -3,6 +3,10 @@ Slideshow
 
 Plugin SlideShow for Magix CMS
 
+###version 
+
+[![release](https://img.shields.io/github/release/magix-cms/slideshow.svg)](https://github.com/magix-cms/slideshow/releases/latest)
+
 ## Installation
  * Décompresser l'archive dans le dossier "plugins" de magix cms
  * Connectez-vous dans l'administration de votre site internet 
