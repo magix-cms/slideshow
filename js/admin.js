@@ -296,6 +296,7 @@ var MC_SlideShow = (function($, window, document, undefined){
                 getAjaxSortable = geturl+'&action=list';
                 break;
             case 'category':
+            case 'subcategory':
                 getAjaxSortable = geturl;
                 break;
         }
