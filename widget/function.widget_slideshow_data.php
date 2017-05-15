@@ -46,6 +46,9 @@ function smarty_function_widget_slideshow_data($params, $template){
     }elseif(isset($_GET['idclc'])){
         $id = $_GET['idclc'];
         $plugin = 'category';
+    }elseif(isset($_GET['getidpage'])){
+        $id = $_GET['getidpage'];
+        $plugin = 'cms';
     }else{
         $id = frontend_model_template::current_Language();
         $plugin = 'root';

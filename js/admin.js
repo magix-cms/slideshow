@@ -29,6 +29,9 @@ var MC_SlideShow = (function($, window, document, undefined){
             case 'root':
                 return '/'+baseadmin+'/plugins.php?name=slideshow&getlang='+getlang;
                 break;
+            case 'cms':
+                return '/'+baseadmin+'/cms.php?getlang='+getlang+'&action=edit&edit='+edit+'&plugin=slideshow';
+                break;
             case 'category':
                 return '/'+baseadmin+'/catalog.php?section=category&getlang='+getlang+'&action=edit&edit='+edit+'&plugin=slideshow';
                 break;
@@ -61,6 +64,9 @@ var MC_SlideShow = (function($, window, document, undefined){
                     return '/'+baseadmin+'/plugins.php?name=slideshow&getlang='+getlang+'&action=remove';
                 }
                 break;
+            case 'cms':
+                return '/'+baseadmin+'/cms.php?getlang='+getlang+'&action=edit&edit='+edit+'&plugin=slideshow';
+                break;
             case 'category':
                 return '/'+baseadmin+'/catalog.php?section=category&getlang='+getlang+'&action=edit&edit='+edit+'&plugin=slideshow';
                 break;
@@ -82,6 +88,7 @@ var MC_SlideShow = (function($, window, document, undefined){
             case 'root':
                 getImg = '&'+'jsonimg=true';
                     break;
+            case 'cms':
             case 'category':
             case 'subcategory':
                 getImg = '&id='+collection['id']+'&'+'jsoncatimg=true';
@@ -147,6 +154,7 @@ var MC_SlideShow = (function($, window, document, undefined){
                     case 'root':
                         var getParams = '';
                         break;
+                    case 'cms':
                     case 'category':
                     case 'subcategory':
                         var getParams = '&id='+collection['id'];
@@ -295,6 +303,7 @@ var MC_SlideShow = (function($, window, document, undefined){
             case 'root':
                 getAjaxSortable = geturl+'&action=list';
                 break;
+            case 'cms':
             case 'category':
             case 'subcategory':
                 getAjaxSortable = geturl;

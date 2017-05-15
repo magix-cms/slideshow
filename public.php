@@ -67,6 +67,11 @@ class db_slideshow{
          * switch table
          */
         switch($plugin){
+            case 'cms':
+                $table = 'mc_plugins_slideshow_cms';
+                $join = '';
+                $where = ' WHERE sl.idpage = :id';
+                break;
             case 'category':
                 $table = 'mc_plugins_slideshow_category';
                 $join = '';

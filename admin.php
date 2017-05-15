@@ -318,6 +318,7 @@ class plugins_slideshow_admin extends db_slideshow{
                     $this->add($data);
                 }
                 break;
+            case 'cms':
             case 'category':
             case 'subcategory':
                 if (isset($this->id)){
@@ -343,6 +344,7 @@ class plugins_slideshow_admin extends db_slideshow{
                     $img = $this->uploadImg($data['type'],$this->img_slide,'img_slide',true);
                     $id = $this->edit;
                     break;
+                case 'cms':
                 case 'category':
                 case 'subcategory':
                     $img = $this->uploadImg($data['type'],$this->img_slide,'img_slide',true);
@@ -425,7 +427,7 @@ class plugins_slideshow_admin extends db_slideshow{
                 'type'      =>  $type,
                 'id'    =>  $this->getlang
             ));
-        }elseif($type === 'category' OR $type === 'subcategory'){
+        }elseif($type === 'cms' OR $type === 'category' OR $type === 'subcategory'){
             return parent::fetch(array(
                 'context'   =>  'all',
                 'type'      =>  $type,
@@ -454,7 +456,7 @@ class plugins_slideshow_admin extends db_slideshow{
                 'type'      =>  $type,
                 'id'    =>  $this->getlang
             ));
-        }elseif($type === 'category' OR $type === 'subcategory'){
+        }elseif($type === 'cms' OR $type === 'category' OR $type === 'subcategory'){
             return parent::fetch(array(
                 'context'   =>  'last',
                 'type'      =>  $type,
@@ -483,6 +485,7 @@ class plugins_slideshow_admin extends db_slideshow{
                     'id'    =>  $this->edit
                 ));
                 break;
+            case 'cms':
             case 'category':
             case 'subcategory':
             $setData = parent::fetch(array(
@@ -751,6 +754,62 @@ class plugins_slideshow_admin extends db_slideshow{
             }
         }
     }
+    /**
+     * Intégration du plugin dans les catégories du catalogue
+     * @param $plugin
+     * @param $getlang
+     * @param $edit
+     */
+    public function cms($plugin,$getlang,$edit){
+        $header= new magixglobal_model_header();
+        $json = new magixglobal_model_json();
+        if(isset($_GET['plugin'])){
+            if(isset($this->sliderorder)){
+                $this->executeOrderSlider(array('type'=>'cms'));
+            }elseif(magixcjquery_filter_request::isGet('jsoncatimg')){
+                $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
+                $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
+                $header->pragma();
+                $header->cache_control("nocache");
+                $header->getStatus('200');
+                $header->html_header("UTF-8");
+                $this->json_slider_image(array('type'=>'cms'));
+            }else{
+                if(isset($this->title_slide)){
+                    if(isset($this->id)){
+                        $this->save(
+                            array(
+                                'type'  =>  'cms',
+                                'id'    =>  $this->id
+                            )
+                        );
+                    }else{
+                        $header->set_json_headers();
+                        $this->save(
+                            array(
+                                'type'  =>  'cms',
+                                'id'    =>  $this->edit
+                            )
+                        );
+                    }
+
+                }elseif($this->img_slide){
+                    $this->setUpdateImg(
+                        array(
+                            'type'=>'cms',
+                            'id'=>$this->id
+                        )
+                    );
+                }elseif(isset($this->del_slide)){
+                    $this->removeItem(array('type'=>'cms','id'=>$this->del_slide));
+                }else{
+                    $this->setData(array('type'=>'cms'));
+                    $this->getItemsData('cms');
+                    $this->template->display('cms.tpl');
+                }
+            }
+        }
+    }
 }
 class db_slideshow{
 	/**
@@ -772,6 +831,11 @@ class db_slideshow{
         if (is_array($data)) {
             if ($data['context'] === 'all') {
                 switch($data['type']){
+                    case 'cms':
+                        $table = 'mc_plugins_slideshow_cms';
+                        $join = '';
+                        $where = ' WHERE sl.idpage = :id';
+                        break;
                     case 'category':
                         $table = 'mc_plugins_slideshow_category';
                         $join = '';
@@ -796,6 +860,11 @@ class db_slideshow{
                 ));
             }elseif($data['context'] === 'last'){
                 switch($data['type']){
+                    case 'cms':
+                        $table = 'mc_plugins_slideshow_cms';
+                        $join = '';
+                        $where = ' WHERE sl.idpage = :id ORDER BY sl.idslide DESC LIMIT 0,1';
+                        break;
                     case 'category':
                         $table = 'mc_plugins_slideshow_category';
                         $join = '';
@@ -821,6 +890,9 @@ class db_slideshow{
                 switch($data['type']){
                     case 'root':
                         $table = 'mc_plugins_slideshow';
+                        break;
+                    case 'cms':
+                        $table = 'mc_plugins_slideshow_cms';
                         break;
                     case 'category':
                         $table = 'mc_plugins_slideshow_category';
@@ -848,6 +920,10 @@ class db_slideshow{
                 case 'root':
                     $table = 'mc_plugins_slideshow';
                     $column = 'idlang';
+                    break;
+                case 'cms':
+                    $table = 'mc_plugins_slideshow_cms';
+                    $column = 'idpage';
                     break;
                 case 'category':
                     $table = 'mc_plugins_slideshow_category';
@@ -884,6 +960,9 @@ class db_slideshow{
                     case 'root':
                         $table = 'mc_plugins_slideshow';
                         break;
+                    case 'cms':
+                        $table = 'mc_plugins_slideshow_cms';
+                        break;
                     case 'category':
                         $table = 'mc_plugins_slideshow_category';
                         break;
@@ -909,6 +988,9 @@ class db_slideshow{
                 ));
             }elseif ($data['context'] === 'img') {
                 switch($data['type']){
+                    case 'cms':
+                        $table = 'mc_plugins_slideshow_cms';
+                        break;
                     case 'category':
                         $table = 'mc_plugins_slideshow_category';
                         break;
@@ -933,6 +1015,9 @@ class db_slideshow{
                 switch($data['type']){
                     case 'category':
                         $table = 'mc_plugins_slideshow_category';
+                        break;
+                    case 'cms':
+                        $table = 'mc_plugins_slideshow_cms';
                         break;
                     case 'root':
                         $table = 'mc_plugins_slideshow';
@@ -967,6 +1052,9 @@ class db_slideshow{
         switch($plugin){
             case 'root':
                 $table = 'mc_plugins_slideshow';
+                break;
+            case 'cms':
+                $table = 'mc_plugins_slideshow_cms';
                 break;
             case 'category':
                 $table = 'mc_plugins_slideshow_category';

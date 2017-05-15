@@ -31,4 +31,15 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_slideshow_subcategory` (
   PRIMARY KEY (`idslide`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+CREATE TABLE IF NOT EXISTS `mc_plugins_slideshow_cms` (
+  `idslide` smallint(5) NOT NULL AUTO_INCREMENT,
+  `idpage` smallint(5) NOT NULL,
+  `uri_slide` varchar(125) NOT NULL,
+  `img_slide` varchar(25) NOT NULL,
+  `title_slide` varchar(125) NOT NULL,
+  `desc_slide` text,
+  `pos_slide` smallint(5) NOT NULL,
+  PRIMARY KEY (`idslide`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
 INSERT INTO `mc_config_size_img` VALUES(null, 6, 'slideshow', 1920, 500, 'large', 'adaptive');
