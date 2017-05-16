@@ -1,4 +1,5 @@
 {if is_array($getItemsData) && !empty($getItemsData)}
+    {$editUrl = "{$pluginUrl}&amp;getlang={$smarty.get.getlang}&action=edit&edit="}
     {foreach $getItemsData as $key}
         <tr id="sliderorder_{$key.idslide}">
             <td>{$key.idslide}</td>

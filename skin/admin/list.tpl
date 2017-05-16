@@ -30,8 +30,7 @@
         </tr>
         </thead>
         <tbody id="list_page" class="ui-sortable">
-        {$editUrl = "{$pluginUrl}&amp;getlang={$smarty.get.getlang}&action=edit&edit="}
-        {include file="loop/items.tpl" editUrl=$editUrl}
+        {include file="loop/items.tpl"}
         {include file="no-entry.tpl"}
         </tbody>
     </table>
