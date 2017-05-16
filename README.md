@@ -25,6 +25,13 @@ Plugin SlideShow for Magix CMS
 La mise à jour du plugin est à effectuer en remplaçant le dossier du plugin par la nouvelle version
 et de se connecter à l'administration de celui-ci pour faire la mise à jour des tables SQL.
 
+#### Liste des images disponible avec drag & drop
+![slideshow-list](https://cloud.githubusercontent.com/assets/356674/26094658/186cfb46-3a1b-11e7-83f0-069b09bde21a.png)
+
+#### Edition d'un slide
+
+![slideshow-edit](https://cloud.githubusercontent.com/assets/356674/26094659/18715844-3a1b-11e7-8260-e24c63b1bdad.png)
+
 <pre>
 
 This file is a plugin of Magix CMS.
