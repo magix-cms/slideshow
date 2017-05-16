@@ -3,7 +3,7 @@ Slideshow
 
 Plugin SlideShow for Magix CMS
 
-###version 
+### version 
 
 [![release](https://img.shields.io/github/release/magix-cms/slideshow.svg)](https://github.com/magix-cms/slideshow/releases/latest)
 

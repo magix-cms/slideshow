@@ -23,8 +23,8 @@
 				</authors>
 				<version>
 					<date_create>26/08/2011</date_create>
-					<date_update>03/02/2017</date_update>
-					<number>3.0</number>
+					<date_update>16/05/2017</date_update>
+					<number>3.1</number>
 					<phase>Stable</phase>
                     <support>
                         <ticket href="https://github.com/magix-cms/slideshow/issues"></ticket>
