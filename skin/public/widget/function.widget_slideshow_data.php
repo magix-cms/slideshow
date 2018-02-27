@@ -79,35 +79,4 @@ function smarty_function_widget_slideshow_data($params, $template){
 	$assign = isset($params['assign']) ? $params['assign'] : 'slides';
 
 	$template->assign($assign,$slideshow->getSlides($params));
-
-
-    /*if(isset($params['id']) && isset($params['type'])){
-        $id = $params['id'];
-        $plugin = $params['type'];
-    }else{
-        if(isset($_GET['idcls'])){
-            $id = $_GET['idcls'];
-            $plugin = 'subcategory';
-        }elseif(isset($_GET['idclc'])){
-            $id = $_GET['idclc'];
-            $plugin = 'category';
-        }elseif(isset($_GET['getidpage'])){
-            $id = $_GET['getidpage'];
-            $plugin = 'cms';
-        }else{
-            $id = frontend_model_template::current_Language();
-            $plugin = 'root';
-        }
-    }
-
-    $collection = new plugins_slideshow_public();
-    $assign = isset($params['assign']) ? $params['assign'] : 'collectionSlideshow';
-    // Assign
-    $template->assign(
-        $assign,
-        $collection->collectionData(
-            $id,
-            $plugin
-        )
-    );*/
 }

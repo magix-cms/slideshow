@@ -13,7 +13,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -33,75 +33,68 @@
  * @name Slideshow
  *
  */
-class plugins_slideshow_public extends db_slideshow{
+class plugins_slideshow_public extends plugins_slideshow_db {
+	protected $template, $data, $getlang, $imagesComponent;
+
 	/**
-	 * @access private
-	 * retourne le chemin public de l'image
+	 * plugins_slideshow_public constructor.
 	 */
-	public function dir_img_slide($img_slide){
-		$filter = new magixglobal_model_imagepath();
-		return $filter->filterPathImg(array('img'=>'upload/slideshow/'.$img_slide));
+	public function __construct(){
+		$this->template = new frontend_model_template();
+		$this->data = new frontend_model_data($this);
+		$this->getlang = $this->template->currentLanguage();
+		$this->imagesComponent = new component_files_images($this->template);
 	}
 
-    /**
-     * @access private
-     * Retourne un tableau des valeurs du slider suivant la langue
-     * @param $id
-     * @param $plugin
-     * @return array
-     */
-    public static function collectionData($id,$plugin){
-		return parent::s_slideshow_data($id,$plugin);
+	/**
+	 * Assign data to the defined variable or return the data
+	 * @param string $type
+	 * @param string|int|null $id
+	 * @param string $context
+	 * @param boolean $assign
+	 * @return mixed
+	 */
+	private function getItems($type, $id = null, $context = null, $assign = true) {
+		return $this->data->getItems($type, $id, $context, $assign);
+	}
+
+	/**
+	 * @param $data
+	 * @return array
+	 */
+	private function setItemSlideData($data)
+	{
+		$arr = array();
+		foreach ($data as $slide) {
+			$arr[$slide['id_slide']] = array();
+			$arr[$slide['id_slide']]['id_slide'] = $slide['id_slide'];
+			$arr[$slide['id_slide']]['id_lang'] = $slide['id_lang'];
+			$arr[$slide['id_slide']]['title_slide'] = $slide['title_slide'];
+			$arr[$slide['id_slide']]['desc_slide'] = $slide['desc_slide'];
+			$arr[$slide['id_slide']]['url_slide'] = $slide['url_slide'];
+			$arr[$slide['id_slide']]['blank_slide'] = $slide['blank_slide'];
+
+			$imgPrefix = $this->imagesComponent->prefix();
+			$fetchConfig = $this->imagesComponent->getConfigItems(array(
+				'module_img'    =>'plugins',
+				'attribute_img' =>'slideshow'
+			));
+			foreach ($fetchConfig as $key => $value) {
+				$arr[$slide['id_slide']]['imgSrc'][$value['type_img']] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $slide['img_slide'];
+			}
+		}
+		return $arr;
+	}
+
+	/**
+	 * @param array $params
+	 * @return array
+	 */
+	public function getSlides($params = array())
+	{
+		if(!is_array($params) || empty($params)) {
+			$slides = $this->getItems('homeSlides',array('lang' => $this->getlang),'all', false);
+			return $this->setItemSlideData($slides);
+		}
 	}
 }
-class db_slideshow{
-    /**
-     * @access protected
-     * Retourne les éléments suivant le type sélectionné
-     * @param $id
-     * @param $plugin
-     * @return array
-     */
-    protected function s_slideshow_data($id,$plugin){
-        /**
-         * switch table
-         */
-        switch($plugin){
-            case 'cms':
-                $table = 'mc_plugins_slideshow_cms';
-                $join = '';
-                $where = ' WHERE sl.idpage = :id';
-                break;
-            case 'category':
-                $table = 'mc_plugins_slideshow_category';
-                $join = '';
-                $where = ' WHERE sl.idclc = :id';
-                break;
-            case 'subcategory':
-                $table = 'mc_plugins_slideshow_subcategory';
-                $join = '';
-                $where = ' WHERE sl.idcls = :id';
-                break;
-            case 'root':
-                $table = 'mc_plugins_slideshow';
-                $join = ' JOIN
-		        mc_lang AS lang ON ( sl.idlang = lang.idlang ) ';
-                $where = ' WHERE lang.iso = :id ';
-                break;
-        }
-        $sql =
-            'SELECT
-              sl.*
-            FROM
-            '.$table.' AS sl
-		    '.$join.'
-		    '.$where.'
-		    ORDER BY
-		      sl.pos_slide
-		';
-        return magixglobal_model_db::layerDB()->select($sql,array(
-            ':id'   =>	$id,
-        ));
-    }
-}
-?>
