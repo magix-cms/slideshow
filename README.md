@@ -1,7 +1,7 @@
 Slideshow
 =========
 
-Plugin SlideShow for Magix CMS
+Plugin SlideShow for Magix CMS 3
 
 ### version 
 
@@ -26,18 +26,18 @@ La mise à jour du plugin est à effectuer en remplaçant le dossier du plugin p
 et de se connecter à l'administration de celui-ci pour faire la mise à jour des tables SQL.
 
 #### Liste des images disponible avec drag & drop
-![slideshow-list](https://cloud.githubusercontent.com/assets/356674/26094658/186cfb46-3a1b-11e7-83f0-069b09bde21a.png)
 
+![screenshot-2018-2-27 slideshow magix cms admin](https://user-images.githubusercontent.com/356674/36722070-de6a3f66-1bac-11e8-92ca-36bfbe83bad3.png)
 #### Edition d'un slide
 
-![slideshow-edit](https://cloud.githubusercontent.com/assets/356674/26094659/18715844-3a1b-11e7-8260-e24c63b1bdad.png)
+![screenshot-2018-2-27 slideshow magix cms admin 2](https://user-images.githubusercontent.com/356674/36722069-de51a4e2-1bac-11e8-89af-676489e62f3e.png)
 
 <pre>
 
 This file is a plugin of Magix CMS.
 Magix CMS, a CMS optimized for SEO
 
-Copyright (C) 2008 - 2017 magix-cms.com support[at]magix-cms[point]com
+Copyright (C) 2008 - 2018 magix-cms.com support[at]magix-cms[point]com
 
 AUTHORS :
 
