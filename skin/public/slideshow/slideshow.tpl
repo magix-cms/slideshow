@@ -45,12 +45,13 @@
             {foreach $slides as $slide}
                 <div class="item{if $slide@first} active{/if}">
                     {strip}
-                    <picture>
+                        <picture>
                         <!--[if IE 9]><video style="display: none;"><![endif]-->
-                        <source sizes="100vw"
-                                srcset="{$slide.imgSrc['large']} 1920w,
-                                    {$slide.imgSrc['medium']} 960w,
-                                    {$slide.imgSrc['small']} 500w">
+                        <source media="(max-width: 500px)"
+                                srcset="{$slide.imgSrc['small']} 500w">
+                        <source media="(max-width: 960px)"
+                                srcset="{$slide.imgSrc['medium']} 960w">
+                        <source srcset="{$slide.imgSrc['large']} 1920w">
                         <!--[if IE 9]></video><![endif]-->
                         <img src="{$slide.imgSrc['small']}"
                              sizes="100vw"
@@ -58,7 +59,7 @@
                                 {$slide.imgSrc['medium']} 960w,
                                 {$slide.imgSrc['small']} 500w"
                              alt="{$slide.title_slide}" title="{$slide.title_slide}" />
-                    </picture>{/strip}
+                        </picture>{/strip}
                     <div class="carousel-caption">
                         <div>
                             <h3 class="h2">{$slide.title_slide}</h3>
