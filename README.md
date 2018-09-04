@@ -18,8 +18,8 @@ Plugin SlideShow for Magix CMS 3
  * Supprimer l'ancien plugin
  * Envoyer les nouveaux fichiers
  * Connectez-vous dans l'administration de votre site internet 
- * Cliquer sur l'onglet extensions et choisissez slideshow.
- * laisser faire l'auto update
+ * Cliquer sur l'onglet plugins du menu déroulant pour sélectionner gmap.
+ * Une fois dans le plugin, laisser faire l'auto update
 
 ### MISE A JOUR
 La mise à jour du plugin est à effectuer en remplaçant le dossier du plugin par la nouvelle version
@@ -31,13 +31,6 @@ et de se connecter à l'administration de celui-ci pour faire la mise à jour de
 #### Edition d'un slide
 
 ![screenshot-2018-2-27 slideshow magix cms admin 2](https://user-images.githubusercontent.com/356674/36722069-de51a4e2-1bac-11e8-89af-676489e62f3e.png)
-
-Copier le dossier public dans votre skin en le renonommantmmant 
-```smarty
-{block name="main:before"}
-    {include file="slideshow/home.tpl"}
-{/block}
-```
 
 <pre>
 

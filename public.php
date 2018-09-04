@@ -80,7 +80,10 @@ class plugins_slideshow_public extends plugins_slideshow_db {
 				'attribute_img' =>'slideshow'
 			));
 			foreach ($fetchConfig as $key => $value) {
-				$arr[$slide['id_slide']]['imgSrc'][$value['type_img']] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $slide['img_slide'];
+				$arr[$slide['id_slide']]['img'][$value['type_img']]['src'] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $slide['img_slide'];
+				$arr[$slide['id_slide']]['img'][$value['type_img']]['w'] = $value['width_img'];
+				$arr[$slide['id_slide']]['img'][$value['type_img']]['h'] = $value['height_img'];
+				$arr[$slide['id_slide']]['img'][$value['type_img']]['crop'] = $value['resize_img'];
 			}
 		}
 		return $arr;

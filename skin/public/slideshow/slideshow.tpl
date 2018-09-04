@@ -1,13 +1,13 @@
 {if is_array($slides) && $slides != null}
     {if $amp}
-    <amp-carousel id="home-slidehow" class="carousel2"
+    <amp-carousel id="{$id_slider}" class="carousel2"
                   layout="responsive"
-                  height="200"
-                  width="500"
+                  height="{$slide.img['small']['h']}"
+                  width="{$slide.img['small']['w']}"
                   type="slides">
         {foreach $slides as $slide}
             <div class="slide">
-                <amp-img src="{$slide.imgSrc.small}"
+                <amp-img src="{$slide.img['small']['src']}"
                          alt="{$slide.title_slide}"
                          title="{$item.name}"
                          layout="fill" itemprop="image"></amp-img>
@@ -24,10 +24,10 @@
         {/foreach}
     </amp-carousel>
     {else}
-    <div id="home-slidehow" class="carousel slide hidden-xs carousel-fade" data-ride="carousel">
+    <div id="{$id_slider}" class="carousel slide{if isset($transition)} carousel-{$transition}{/if}" data-ride="carousel"{if isset($interval)} data-interval="{$interval}"{/if}>
         {if count($slides) > 1}
             <div class="carousel-controls">
-            <a class="left carousel-control" href="#home-slidehow" role="button" data-slide="prev">
+            <a class="left carousel-control" href="#{$id_slider}" role="button" data-slide="prev">
                 <span class="fa fa-angle-left" aria-hidden="true"></span>
                 <span class="sr-only">Previous</span>
             </a>
@@ -36,7 +36,7 @@
                     <li data-target="#home-slidehow" data-slide-to="{$slide@index}"{if $slide@first} class="active"{/if}></li>
                 {/foreach}
             </ol>
-            <a class="right carousel-control" href="#home-slidehow" role="button" data-slide="next">
+            <a class="right carousel-control" href="#{$id_slider}" role="button" data-slide="next">
                 <span class="fa fa-angle-right" aria-hidden="true"></span>
                 <span class="sr-only">Next</span>
             </a>
@@ -45,21 +45,24 @@
             {foreach $slides as $slide}
                 <div class="item{if $slide@first} active{/if}">
                     {strip}
-                        <picture>
+                    <picture>
                         <!--[if IE 9]><video style="display: none;"><![endif]-->
-                        <source media="(max-width: 500px)"
-                                srcset="{$slide.imgSrc['small']} 500w">
-                        <source media="(max-width: 960px)"
-                                srcset="{$slide.imgSrc['medium']} 960w">
-                        <source srcset="{$slide.imgSrc['large']} 1920w">
+                        <source sizes="100vw"
+                                media="(min-width: {$slide.img['medium']['w']}px)"
+                                srcset="{$slide.img['large']['src']} {$slide.img['large']['w']}w">
+                        <source sizes="100vw"
+                                media="(min-width: {$slide.img['small']['w']}px)"
+                                srcset="{$slide.img['medium']['src']} {$slide.img['medium']['w']}w">
+                        <source sizes="100vw"
+                                srcset="{$slide.img['small']['src']} {$slide.img['small']['w']}w">
                         <!--[if IE 9]></video><![endif]-->
                         <img src="{$slide.imgSrc['small']}"
                              sizes="100vw"
-                             srcset="{$slide.imgSrc['large']} 1920w,
-                                {$slide.imgSrc['medium']} 960w,
-                                {$slide.imgSrc['small']} 500w"
+                             srcset="{$slide.img['large']['src']} {$slide.img['large']['w']}w,
+                                {$slide.img['medium']['src']} {$slide.img['medium']['w']}w,
+                                {$slide.img['small']['src']} {$slide.img['small']['w']}w"
                              alt="{$slide.title_slide}" title="{$slide.title_slide}" />
-                        </picture>{/strip}
+                    </picture>{/strip}
                     <div class="carousel-caption">
                         <div>
                             <h3 class="h2">{$slide.title_slide}</h3>
