@@ -1,28 +1,32 @@
 {if is_array($slides) && $slides != null}
     {if $amp}
-    <amp-carousel id="{$id_slider}" class="carousel2"
-                  layout="responsive"
-                  height="{$slide.img['small']['h']}"
-                  width="{$slide.img['small']['w']}"
-                  type="slides">
-        {foreach $slides as $slide}
-            <div class="slide">
-                <amp-img src="{$slide.img['small']['src']}"
-                         alt="{$slide.title_slide}"
-                         title="{$item.name}"
-                         layout="fill" itemprop="image"></amp-img>
+        {$ref = $slides|end}
+        <amp-carousel id="{$id_slider}" class="carousel2"
+                      type="slides"
+                      autoplay
+                      delay="3000"
+                      layout="responsive"
+                      height="{$ref.img['small']['h']}"
+                      width="{$ref.img['small']['w']}"
+                      type="slides">
+            {foreach $slides as $slide}
+                <div class="slide">
+                    <amp-img src="{$slide.img['small']['src']}"
+                             alt="{$slide.title_slide}"
+                             title="{$item.name}"
+                             layout="fill" itemprop="image"></amp-img>
 
-                <div class="caption">
-                    <div class="text">
-                        <h3 class="h2">{$slide.title_slide}</h3>
-                        {if !empty($slide.desc_slide)}
-                            <p class="lead">{$slide.desc_slide}</p>
-                        {/if}
+                    <div class="caption">
+                        <div class="text">
+                            <h3 class="h2">{$slide.title_slide}</h3>
+                            {if !empty($slide.desc_slide)}
+                                <p class="lead">{$slide.desc_slide}</p>
+                            {/if}
+                        </div>
                     </div>
                 </div>
-            </div>
-        {/foreach}
-    </amp-carousel>
+            {/foreach}
+        </amp-carousel>
     {else}
     <div id="{$id_slider}" class="carousel slide{if isset($transition)} carousel-{$transition}{/if}" data-ride="carousel"{if isset($interval)} data-interval="{$interval}"{/if}>
         {if count($slides) > 1}
