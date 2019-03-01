@@ -65,6 +65,7 @@ class plugins_slideshow_public extends plugins_slideshow_db {
 	private function setItemSlideData($data)
 	{
 		$arr = array();
+        $extwebp = 'webp';
 		foreach ($data as $slide) {
 			$arr[$slide['id_slide']] = array();
 			$arr[$slide['id_slide']]['id_slide'] = $slide['id_slide'];
@@ -79,8 +80,11 @@ class plugins_slideshow_public extends plugins_slideshow_db {
 				'module_img'    =>'plugins',
 				'attribute_img' =>'slideshow'
 			));
+            $imgData = pathinfo($slide['img_slide']);
+            $filename = $imgData['filename'];
 			foreach ($fetchConfig as $key => $value) {
 				$arr[$slide['id_slide']]['img'][$value['type_img']]['src'] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $slide['img_slide'];
+                $arr[$slide['id_slide']]['img'][$value['type_img']]['src_webp'] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $filename . '.'.$extwebp;
 				$arr[$slide['id_slide']]['img'][$value['type_img']]['w'] = $value['width_img'];
 				$arr[$slide['id_slide']]['img'][$value['type_img']]['h'] = $value['height_img'];
 				$arr[$slide['id_slide']]['img'][$value['type_img']]['crop'] = $value['resize_img'];
