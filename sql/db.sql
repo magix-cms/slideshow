@@ -76,9 +76,9 @@ ALTER TABLE `mc_slideshow_pages_content`
   ADD CONSTRAINT `mc_slideshow_pages_content_ibfk_2` FOREIGN KEY (`id_lang`) REFERENCES `mc_lang` (`id_lang`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 INSERT INTO `mc_config_img` (`id_config_img`, `module_img`, `attribute_img`, `width_img`, `height_img`, `type_img`, `resize_img`) VALUES
-  (null, 'plugins', 'slideshow', '500', '200', 'small', 'adaptive'),
-  (null, 'plugins', 'slideshow', '960', '320', 'medium', 'adaptive'),
-  (null, 'plugins', 'slideshow', '1920', '500', 'large', 'adaptive');
+  (null, 'plugins', 'slideshow', '480', '192', 'small', 'adaptive'),
+  (null, 'plugins', 'slideshow', '960', '384', 'medium', 'adaptive'),
+  (null, 'plugins', 'slideshow', '1920', '768', 'large', 'adaptive');
 
 INSERT INTO `mc_admin_access` (`id_role`, `id_module`, `view`, `append`, `edit`, `del`, `action`)
   SELECT 1, m.id_module, 1, 1, 1, 1, 1 FROM mc_module as m WHERE name = 'slideshow';

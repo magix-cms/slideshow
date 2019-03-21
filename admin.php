@@ -49,7 +49,7 @@ require_once ('db.php');
  */
 class plugins_slideshow_admin extends plugins_slideshow_db
 {
-    protected $controller, $message, $template, $plugins, $modelLanguage, $collectionLanguage, $data, $header, $upload, $imagesComponent, $routingUrl;
+    protected $controller, $message, $template, $plugins, $modelLanguage, $collectionLanguage, $data, $header, $upload, $imagesComponent, $routingUrl,$finder,$makeFiles;
 	/**
 	 * GET
 	 * @var $getlang,
@@ -78,7 +78,8 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 		$this->upload = new component_files_upload();
 		$this->imagesComponent = new component_files_images($this->template);
 		$this->routingUrl = new component_routing_url();
-
+        $this->finder = new file_finder();
+        $this->makeFiles = new filesystem_makefile();
 		$formClean = new form_inputEscape();
 
 		// --- Get
@@ -175,11 +176,12 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 		}
 	}
 
-	/**
-	 * @param $name
-	 * @param $id
-	 * @return null|string
-	 */
+    /**
+     * @param $name
+     * @param $id
+     * @return null|string
+     * @throws Exception
+     */
 	private function slide_image($name, $id){
 		if(isset($this->img) && !empty($id)) {
 			return $this->insert_image(
@@ -198,25 +200,25 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 	 */
 	private function delete_image($id)
 	{
-		$makeFiles = new filesystem_makefile();
-		$path = $this->upload->dirImgUploadCollection(array(
-			'upload_root_dir' => 'upload/slideshow', //string
-			'upload_dir'      => $id //string ou array
-		));
+        $setImgDirectory = $this->upload->dirImgUpload(
+            array_merge(
+                array('upload_root_dir' => 'upload/slideshow/' . $id),
+                array('imgBasePath' => true)
+            )
+        );
 
-		$img = $this->getItems('img', $id, 'one', false);
-		$sizes = array('s_', 'm_', 'l_');
+        if (file_exists($setImgDirectory)) {
+            $setFiles = $this->finder->scanDir($setImgDirectory);
+            $clean = '';
+            if ($setFiles != null) {
+                foreach ($setFiles as $file) {
+                    $clean .= $this->makeFiles->remove($setImgDirectory . $file);
+                }
+            }
+            $this->makeFiles->remove($setImgDirectory);
+            return true;
+        }
 
-		if (file_exists($path . $img['img_slide'])) {
-			$makeFiles->remove($path . $img['img_slide']);
-			foreach ($sizes as $prefix) {
-				$makeFiles->remove($path . $prefix . $img['img_slide']);
-			}
-			return true;
-		}
-		else {
-			throw new Exception('file: ' . $img['img_slide'] . ' is not found');
-		}
 	}
 
 	/**
@@ -331,6 +333,19 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 		}
 	}
 
+    /**
+     * Adds the plugin in resizing images
+     * @return array
+     */
+    public function getItemsImages(){
+        $data = $this->getItems('img',NULL,'all',false);
+        $newArr = array();
+        foreach($data as $key => $value){
+            $newArr[$key]['id'] = $value['id_slide'];
+            $newArr[$key]['img'] = $value['img_slide'];
+        }
+        return $newArr;
+    }
 	/**
 	 * Affiche les pages de l'administration du plugin
 	 * @access public
@@ -361,6 +376,25 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 						}
 
 						if(isset($this->img) && !empty($this->img)) {
+                            if(isset($this->slide['id']) && !empty($this->slide['id'])) {
+                                $setImgDirectory = $this->upload->dirImgUpload(
+                                    array_merge(
+                                        array('upload_root_dir' => 'upload/slideshow/' . $this->slide['id']),
+                                        array('imgBasePath' => true)
+                                    )
+                                );
+
+                                if (file_exists($setImgDirectory)) {
+                                    $setFiles = $this->finder->scanDir($setImgDirectory);
+                                    $clean = '';
+                                    if ($setFiles != null) {
+                                        foreach ($setFiles as $file) {
+                                            $clean .= $this->makeFiles->remove($setImgDirectory . $file);
+                                        }
+                                    }
+                                }
+                            }
+
 							$img = $this->slide_image($img, $this->slide['id']);
 							$img = $img['file'];
 						}
