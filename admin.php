@@ -360,10 +360,10 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 						$notify = 'update';
 						$img = null;
 
-						if(isset($this->slide['id']) && !empty($this->slide['id'])) {
+						/*if(isset($this->slide['id']) && !empty($this->slide['id'])) {
 							$img = $this->getItems('img',$this->slide['id'],'one',false);
 							$img = $img['img_slide'];
-						}
+						}*/
 
 						if (!isset($this->slide['id'])) {
 							$this->add(array(
@@ -397,15 +397,15 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 
 							$img = $this->slide_image($img, $this->slide['id']);
 							$img = $img['file'];
-						}
 
-						$this->upd(array(
-							'type' => 'img',
-							'data' => array(
-								'id' => $this->slide['id'],
-								'img' => $img
-							)
-						));
+                            $this->upd(array(
+                                'type' => 'img',
+                                'data' => array(
+                                    'id' => $this->slide['id'],
+                                    'img' => $img
+                                )
+                            ));
+						}
 
 						foreach ($this->slide['content'] as $lang => $slide) {
 							$slide['id_lang'] = $lang;

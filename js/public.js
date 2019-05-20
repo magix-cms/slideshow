@@ -12,4 +12,7 @@ if($(".owl-slideshow").length > 0 && $.fn.owlCarousel !== undefined) {
         dotsContainer: '.owl-slideshow-dots',
         navContainer: '.owl-slideshow-nav'
     }));
+    $(".owl-slideshow .owl-dot").on('click', function() {
+        $(".owl-slideshow > .owl-carousel").trigger('to.owl.carousel', $(this).index());
+    });
 }
