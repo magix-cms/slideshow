@@ -73,10 +73,9 @@
  * @param Smarty
  * @return string
  */
-function smarty_function_widget_slideshow_data($params, $template){
-	$slideshow = new plugins_slideshow_public();
-
+function smarty_function_widget_slideshow_data($params, $smarty){
+	$modelTemplate = $smarty->tpl_vars['modelTemplate']->value instanceof frontend_model_template ? $smarty->tpl_vars['modelTemplate']->value : new frontend_model_template();
+	$slideshow = new plugins_slideshow_public($modelTemplate);
 	$assign = isset($params['assign']) ? $params['assign'] : 'slides';
-
-	$template->assign($assign,$slideshow->getSlides($params));
+	$smarty->assign($assign,$slideshow->getSlides($params));
 }

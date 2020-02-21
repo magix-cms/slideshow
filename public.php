@@ -39,10 +39,10 @@ class plugins_slideshow_public extends plugins_slideshow_db {
 	/**
 	 * plugins_slideshow_public constructor.
 	 */
-	public function __construct(){
-		$this->template = new frontend_model_template();
-		$this->data = new frontend_model_data($this);
-		$this->getlang = $this->template->currentLanguage();
+	public function __construct($t = null){
+		$this->template = $t instanceof frontend_model_template ? $t : new frontend_model_template();
+		$this->data = new frontend_model_data($this,$this->template);
+		$this->getlang = $this->template->lang;
 		$this->imagesComponent = new component_files_images($this->template);
 	}
 

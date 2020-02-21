@@ -1,5 +1,5 @@
 {if !isset($type)}
-    {$type === 'owl-carousel'}
+    {$type = 'owl-carousel'}
 {/if}
 {if is_array($slides) && $slides != null}
     {if $amp}
