@@ -63,6 +63,19 @@ class plugins_slideshow_db
 						$sql = 'SELECT s.id_slide, s.img_slide
                         		FROM mc_slideshow AS s WHERE s.img_slide IS NOT NULL';
 						break;
+                    case 'WSslides':
+                        $sql = 'SELECT 
+									id_slide,
+									slc.url_slide,
+									sl.img_slide,
+									slc.title_slide,
+									slc.desc_slide,
+									slc.id_lang,
+									l.iso_lang,l.default_lang
+ 								FROM mc_slideshow as sl
+								JOIN mc_slideshow_content as slc USING(id_slide)
+								JOIN mc_lang as l USING(id_lang)';
+                        break;
 				}
 
                 return $sql ? component_routing_db::layer()->fetchAll($sql,$params) : null;
@@ -105,6 +118,10 @@ class plugins_slideshow_db
 				$sql = 'INSERT INTO mc_slideshow_content(id_slide, id_lang, title_slide, desc_slide, url_slide, blank_slide, published_slide)
 						VALUES (:id_slide, :id_lang, :title_slide, :desc_slide, :url_slide, :blank_slide, :published_slide)';
 				break;
+            case 'content':
+                $sql = 'INSERT INTO mc_slideshow_content(id_slide, id_lang, title_slide, desc_slide, url_slide, blank_slide, published_slide)
+						VALUES (:id_slide, :id_lang, :title_slide, :desc_slide, :url_slide, :blank_slide, :published_slide)';
+                break;
 			case 'img':
 				$sql = 'UPDATE mc_slideshow 
 						SET img_slide = :img_slide
@@ -146,6 +163,17 @@ class plugins_slideshow_db
 						WHERE id_slide_content = :id 
 						AND id_lang = :id_lang';
 				break;
+            case 'content':
+                $sql = 'UPDATE mc_slideshow_content
+						SET 
+							title_slide = :title_slide,
+							desc_slide = :desc_slide,
+							url_slide = :url_slide,
+							blank_slide = :blank_slide,
+							published_slide = :published_slide
+						WHERE id_slide = :id_slide 
+						AND id_lang = :id_lang';
+                break;
 			case 'img':
 				$sql = 'UPDATE mc_slideshow
 						SET 
