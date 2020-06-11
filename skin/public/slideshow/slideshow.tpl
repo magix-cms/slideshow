@@ -88,31 +88,33 @@
         </div>
         {elseif $type === 'owl-carousel'}
         <div id="{$id_slider}" class="owl-slideshow">
-            <div class="owl-carousel owl-theme">
+            <div class="slideshow" data-prev="{#prev_slide#}" data-next="{#next_slide#}">
             {foreach $slides as $k => $slide}
                 <div class="slide" data-dot="<span><span>Slide {$k}</span></span>">
-                    {strip}<picture>
-                    <!--[if IE 9]><video style="display: none;"><![endif]-->
-                    <source type="image/webp" sizes="{$slide.img['large']['w']}px" media="(min-width: 1200px)" srcset="{$slide.img['large']['src_webp']} {$slide.img['large']['w']}w">
-                    <source type="image/webp" sizes="{$slide.img['medium']['w']}px" media="(min-width: 768px)" srcset="{$slide.img['medium']['src_webp']} {$slide.img['medium']['w']}w">
-                    <source type="image/webp" sizes="{$slide.img['small']['w']}px" srcset="{$slide.img['small']['src_webp']} {$slide.img['small']['w']}w">
-                    <source type="image/png" sizes="{$slide.img['large']['w']}px" media="(min-width: 1200px)" srcset="{$slide.img['large']['src']} {$slide.img['large']['w']}w">
-                    <source type="image/png" sizes="{$slide.img['medium']['w']}px" media="(min-width: 768px)" srcset="{$slide.img['medium']['src']} {$slide.img['medium']['w']}w">
-                    <source type="image/png" sizes="{$slide.img['small']['w']}px" srcset="{$slide.img['small']['src']} {$slide.img['small']['w']}w">
-                    <!--[if IE 9]></video><![endif]-->
-                    <img src="{$slide.img['small']['src']}" sizes="(min-width: 1200px) {$slide.img['large']['w']}px, (min-width: 768px) {$slide.img['medium']['w']}px, {$slide.img['small']['w']}px" srcset="{$slide.img['large']['src']} {$slide.img['large']['w']}w,
-                                {$slide.img['medium']['src']} {$slide.img['medium']['w']}w,
-                                {$slide.img['small']['src']} {$slide.img['small']['w']}w" alt="{$slide.title_slide}" title="{$slide.title_slide}" class="img-responsive lazyload" />
-                    </picture>{/strip}
-                    <div class="carousel-caption">
-                        <h3>{$slide.title_slide}</h3>
-                        {if !empty($slide.desc_slide)}
-                            <p>{$slide.desc_slide}</p>
-                        {/if}
+                    <div class="figure">
+                        {strip}<picture>
+                        <!--[if IE 9]><video style="display: none;"><![endif]-->
+                        <source type="image/webp" sizes="{$slide.img['large']['w']}px" media="(min-width: 1200px)" srcset="{$slide.img['large']['src_webp']} {$slide.img['large']['w']}w">
+                        <source type="image/webp" sizes="{$slide.img['medium']['w']}px" media="(min-width: 768px)" srcset="{$slide.img['medium']['src_webp']} {$slide.img['medium']['w']}w">
+                        <source type="image/webp" sizes="{$slide.img['small']['w']}px" srcset="{$slide.img['small']['src_webp']} {$slide.img['small']['w']}w">
+                        <source type="image/png" sizes="{$slide.img['large']['w']}px" media="(min-width: 1200px)" srcset="{$slide.img['large']['src']} {$slide.img['large']['w']}w">
+                        <source type="image/png" sizes="{$slide.img['medium']['w']}px" media="(min-width: 768px)" srcset="{$slide.img['medium']['src']} {$slide.img['medium']['w']}w">
+                        <source type="image/png" sizes="{$slide.img['small']['w']}px" srcset="{$slide.img['small']['src']} {$slide.img['small']['w']}w">
+                        <!--[if IE 9]></video><![endif]-->
+                        <img src="{$slide.img['small']['src']}" sizes="(min-width: 1200px) {$slide.img['large']['w']}px, (min-width: 768px) {$slide.img['medium']['w']}px, {$slide.img['small']['w']}px" srcset="{$slide.img['large']['src']} {$slide.img['large']['w']}w,
+                                    {$slide.img['medium']['src']} {$slide.img['medium']['w']}w,
+                                    {$slide.img['small']['src']} {$slide.img['small']['w']}w" alt="{$slide.title_slide}" title="{$slide.title_slide}" class="img-responsive lazyload" />
+                        </picture>{/strip}
+                        <div class="carousel-caption">
+                            <div class="container">
+                                <p class="title">{$slide.title_slide}</p>
+                                {if !empty($slide.desc_slide)}{$slide.desc_slide}{/if}
+                            </div>
+                            {if isset($slide.url_slide) && !empty($slide.url_slide)}
+                                <a href="{$slide.url_slide}" title="{$key.title_slide}" class="all-hover{if $slide.blank_slide} targetblank{/if}">{$slide.title_slide}</a>
+                            {/if}
+                        </div>
                     </div>
-                    {if isset($slide.url_slide) && !empty($slide.url_slide)}
-                        <a href="{$slide.url_slide}" title="{$key.title_slide}" class="all-hover{if $slide.blank_slide} targetblank{/if}">{$slide.title_slide}</a>
-                    {/if}
                 </div>
             {/foreach}
             </div>

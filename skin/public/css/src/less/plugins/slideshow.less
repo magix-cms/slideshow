@@ -1,0 +1,49 @@
+//
+// Rules for home page
+//
+#home {
+	main {
+		padding-bottom: 1rem;
+	}
+}
+//
+// Rules for home page
+//
+#home-slideshow {
+	.tns-controls {
+		button {
+			position: absolute;
+			text-align: center;
+			z-index: 200;
+			background-color: transparent;
+			border: none;
+			opacity: 0.7;
+			height: 100%;
+			padding: 1rem;
+			color: @white;
+
+			.material-icons {
+				font-size: 4rem;
+			}
+
+			&:hover {
+				opacity: 1;
+			}
+			&:focus {
+				outline: none;
+			}
+
+			&[data-controls="prev"] {
+				left: 0;
+			}
+
+			&[data-controls="next"] {
+				right: 0;
+			}
+
+			&:disabled {
+				display: none;
+			}
+		}
+	}
+}
