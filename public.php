@@ -1,93 +1,75 @@
 <?php
-# -- BEGIN LICENSE BLOCK ----------------------------------
-#
-# This file is part of Magix CMS.
-# Magix CMS, a CMS optimized for SEO
-# Copyright (C) 2010 - 2011  Gerits Aurelien <aurelien@magix-cms.com>
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# -- END LICENSE BLOCK -----------------------------------
 /**
- * MAGIX CMS
- * @category   Slideshow 
- * @package    plugin
- * @copyright  MAGIX CMS Copyright (c) 2011 Gerits Aurelien, 
- * http://www.magix-dev.be, http://www.magix-cms.com
- * @license    Dual licensed under the MIT or GPL Version 3 licenses.
- * @version    1.0
- * @create    26-08-2011
- * @Update     12-09-2011
- * @Update     
+ * @category plugin
+ * @package Slideshow
+ * @copyright  MAGIX CMS Copyright (c) 2011 Gerits Aurelien, http://www.magix-dev.be, http://www.magix-cms.com
+ * @license Dual licensed under the MIT or GPL Version 3 licenses.
+ * @version 1.0
  * @author Gérits Aurélien <aurelien@magix-cms.com>
- * @name Slideshow
- *
  */
 class plugins_slideshow_public extends plugins_slideshow_db {
-	protected $template, $data, $getlang, $imagesComponent;
+	/**
+	 * @var frontend_model_template
+	 */
+	protected frontend_model_template $template;
+	protected frontend_model_data $data;
+	protected component_files_images $imagesComponent;
 
 	/**
-	 * plugins_slideshow_public constructor.
+	 * @var string $lang
 	 */
-	public function __construct($t = null){
+	public string $lang;
+
+	/**
+	 * @param ?frontend_model_template $t
+	 */
+	public function __construct(?frontend_model_template $t = null) {
 		$this->template = $t instanceof frontend_model_template ? $t : new frontend_model_template();
 		$this->data = new frontend_model_data($this,$this->template);
-		$this->getlang = $this->template->lang;
-		$this->imagesComponent = new component_files_images($this->template);
+		$this->lang = $this->template->lang;
 	}
 
 	/**
 	 * Assign data to the defined variable or return the data
 	 * @param string $type
-	 * @param string|int|null $id
-	 * @param string $context
-	 * @param boolean $assign
+	 * @param array|int|null $id
+	 * @param ?string $context
+	 * @param bool|string $assign
 	 * @return mixed
 	 */
-	private function getItems($type, $id = null, $context = null, $assign = true) {
+	private function getItems(string $type, $id = null, ?string $context = null, $assign = true) {
 		return $this->data->getItems($type, $id, $context, $assign);
 	}
 
 	/**
-	 * @param $data
+	 * @return void
+	 */
+	private function initImageComponent(): void {
+		if(!isset($this->imagesComponent)) $this->imagesComponent = new component_files_images($this->template);
+	}
+
+	/**
+	 * @param array $slides
 	 * @return array
 	 */
-	private function setItemSlideData($data)
-	{
-		$arr = array();
-        $extwebp = 'webp';
-		foreach ($data as $slide) {
-			$arr[$slide['id_slide']] = array();
-			$arr[$slide['id_slide']]['id_slide'] = $slide['id_slide'];
-			$arr[$slide['id_slide']]['id_lang'] = $slide['id_lang'];
-			$arr[$slide['id_slide']]['title_slide'] = $slide['title_slide'];
-			$arr[$slide['id_slide']]['desc_slide'] = $slide['desc_slide'];
-			$arr[$slide['id_slide']]['url_slide'] = $slide['url_slide'];
-			$arr[$slide['id_slide']]['blank_slide'] = $slide['blank_slide'];
-
-			$imgPrefix = $this->imagesComponent->prefix();
-			$fetchConfig = $this->imagesComponent->getConfigItems(array(
-				'module_img'    =>'plugins',
-				'attribute_img' =>'slideshow'
-			));
-            $imgData = pathinfo($slide['img_slide']);
-            $filename = $imgData['filename'];
-			foreach ($fetchConfig as $key => $value) {
-				$arr[$slide['id_slide']]['img'][$value['type_img']]['src'] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $slide['img_slide'];
-                $arr[$slide['id_slide']]['img'][$value['type_img']]['src_webp'] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $filename . '.'.$extwebp;
-				$arr[$slide['id_slide']]['img'][$value['type_img']]['w'] = $value['width_img'];
-				$arr[$slide['id_slide']]['img'][$value['type_img']]['h'] = $value['height_img'];
-				$arr[$slide['id_slide']]['img'][$value['type_img']]['crop'] = $value['resize_img'];
+	private function setItemSlideData(array $slides): array {
+		$arr = [];
+		if(!empty($slides)) {
+			$this->initImageComponent();
+			foreach ($slides as $slide) {
+				$arr[$slide['id_slide']] = [
+					'id_slide' => $slide['id_slide'],
+					'id_lang' => $slide['id_lang'],
+					'title_slide' => $slide['title_slide'],
+					'desc_slide' => $slide['desc_slide'],
+					'link_slide' => [
+						'url' => $slide['link_url_slide'],
+						'label' => $slide['link_label_slide'],
+						'title' => $slide['link_title_slide']
+					],
+					'blank_slide' => $slide['blank_slide'],
+					'img' => $this->imagesComponent->setModuleImage('slideshow','slideshow',$slide['img_slide'],$slide['id_slide'])
+				];
 			}
 		}
 		return $arr;
@@ -97,11 +79,11 @@ class plugins_slideshow_public extends plugins_slideshow_db {
 	 * @param array $params
 	 * @return array
 	 */
-	public function getSlides($params = array())
-	{
-		if(!is_array($params) || empty($params)) {
-			$slides = $this->getItems('homeSlides',array('lang' => $this->getlang),'all', false);
+	public function getSlides(array $params = []): array {
+		if(empty($params)) {
+			$slides = $this->getItems('homeSlides',['lang' => $this->lang],'all', false);
 			return $this->setItemSlideData($slides);
 		}
+		return [];
 	}
 }

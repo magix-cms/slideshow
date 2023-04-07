@@ -1,6 +1,6 @@
 <div class="row">
     <form id="edit_slide" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=slide&amp;action={if !$edit}add{else}edit{/if}" method="post" class="validate_form{if !$edit} add_form collapse in{else} edit_form{/if} col-ph-12 col-sm-8 col-md-6">
-        <div id="drop-zone"{if !isset($slide.img_slide) || empty($slide.img_slide)} class="no-img"{/if}>
+        <div id="drop-zone"{if !isset($slide.img.name) || empty($slide.img.name)} class="no-img"{/if}>
             <div id="drop-buttons" class="form-group">
                 <label id="clickHere" class="btn btn-default">
                     ou cliquez ici.. <span class="fa fa-upload"></span>
@@ -10,8 +10,8 @@
                 </label>
             </div>
             <div class="preview-img">
-                {if isset($slide.img_slide) && !empty($slide.img_slide)}
-                    <img id="preview" src="/upload/slideshow/{$slide.id_slide}/{$slide.img_slide}" alt="Slide" class="preview img-responsive" />
+                {if isset($slide.img.name) && !empty($slide.img.name)}
+                    <img id="preview" src="/upload/slideshow/{$slide.id_slide}/{$slide.img.name}" alt="Slide" class="preview img-responsive" />
                 {else}
                     <img id="preview" src="#" alt="Déposez votre images ici..." class="no-img img-responsive" />
                 {/if}
@@ -49,8 +49,18 @@
                                 <div class="row">
                                     <div class="col-xs-12 col-sm-12">
                                         <div class="form-group">
-                                            <label for="url_slide_{$id}">{#url_slide#|ucfirst} :</label>
-                                            <input type="text" class="form-control" id="url_slide_{$id}" name="slide[content][{$id}][url_slide]" value="{$slide.content[{$id}].url_slide}" size="50" />
+                                            <label for="link_url_slide_{$id}">{#link_url_slide#|ucfirst} :</label>
+                                            <input type="text" class="form-control" id="link_url_slide_{$id}" name="slide[content][{$id}][link_url_slide]" value="{$slide.content[{$id}].link_url_slide}" size="50" />
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-ph-12 col-xs-6">
+                                                <label for="link_label_slide_{$id}">{#link_label_slide#|ucfirst} :</label>
+                                                <input type="text" class="form-control" id="link_label_slide_{$id}" name="slide[content][{$id}][link_label_slide]" value="{$slide.content[{$id}].link_label_slide}" size="50" />
+                                            </div>
+                                            <div class="col-ph-12 col-xs-6">
+                                                <label for="link_title_slide_{$id}">{#link_title_slide#|ucfirst} :</label>
+                                                <input type="text" class="form-control" id="link_title_slide_{$id}" name="slide[content][{$id}][link_title_slide]" value="{$slide.content[{$id}].link_title_slide}" size="50" />
+                                            </div>
                                         </div>
                                         <div class="form-group">
                                             <label for="blank_slide_{$id}">{#blank_slide#|ucfirst}</label>

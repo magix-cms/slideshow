@@ -47,8 +47,7 @@ require_once ('db.php');
  * @name slideshow
  * Administration du module slideshow
  */
-class plugins_slideshow_admin extends plugins_slideshow_db
-{
+class plugins_slideshow_admin extends plugins_slideshow_db {
     protected $controller, $message, $template, $plugins, $modelLanguage, $collectionLanguage, $data, $header, $upload, $imagesComponent, $routingUrl,$finder,$makeFiles;
 	/**
 	 * GET
@@ -138,6 +137,13 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 	}
 
 	/**
+	 * @return void
+	 */
+	private function initImageComponent(): void {
+		if(!isset($this->imagesComponent)) $this->imagesComponent = new component_files_images($this->template);
+	}
+
+	/**
 	 * Create and insert the address image
 	 * @param $img
 	 * @param $name
@@ -153,7 +159,7 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 					'name'            => filter_rsa::randMicroUI(),
 					'edit'            => $name,
 					'prefix'          => array('s_','m_','l_'),
-					'module_img'      => 'plugins',
+					'module_img'      => 'slideshow',
 					'attribute_img'   => 'slideshow',
 					'original_remove' => false
 				),
@@ -200,19 +206,14 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 	 */
 	private function delete_image($id)
 	{
-        $setImgDirectory = $this->upload->dirImgUpload(
-            array_merge(
-                array('upload_root_dir' => 'upload/slideshow/' . $id),
-                array('imgBasePath' => true)
-            )
-        );
+        $setImgDirectory = $this->routingUrl->dirUpload('upload/slideshow/' . $id,true);
 
         if (file_exists($setImgDirectory)) {
             $setFiles = $this->finder->scanDir($setImgDirectory);
             $clean = '';
             if ($setFiles != null) {
                 foreach ($setFiles as $file) {
-                    $clean .= $this->makeFiles->remove($setImgDirectory . $file);
+                    $this->makeFiles->remove($setImgDirectory . $file);
                 }
             }
             $this->makeFiles->remove($setImgDirectory);
@@ -222,35 +223,32 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 	}
 
 	/**
-	 * @param $data
+	 * @param array $slides
 	 * @return array
 	 */
-	private function setItemSlideData($data)
-	{
-		$arr = array();
-		foreach ($data as $slide) {
-			if (!array_key_exists($slide['id_slide'], $arr)) {
-				$arr[$slide['id_slide']] = array();
-				$arr[$slide['id_slide']]['id_slide'] = $slide['id_slide'];
-				$arr[$slide['id_slide']]['img_slide'] = $slide['img_slide'];
-				$imgPrefix = $this->imagesComponent->prefix();
-				$fetchConfig = $this->imagesComponent->getConfigItems(array(
-					'module_img'    =>'slideshow',
-					'attribute_img' =>'slideshow'
-				));
-				foreach ($fetchConfig as $key => $value) {
-					$arr[$slide['id_slide']]['imgSrc'][$value['type_img']] = '/upload/slideshow/'.$slide['id_slide'].'/'.$imgPrefix[$value['type_img']] . $slide['img_slide'];
+	private function setItemSlideData(array $slides): array {
+		$arr = [];
+		if(!empty($slides)) {
+			$this->initImageComponent();
+			foreach ($slides as $slide) {
+				if (!array_key_exists($slide['id_slide'], $arr)) {
+					$arr[$slide['id_slide']] = [
+						'id_slide' => $slide['id_slide'],
+						'img' => $this->imagesComponent->setModuleImage('slideshow','slideshow',$slide['img_slide'],$slide['id_slide'])
+					];
 				}
-			}
 
-			$arr[$slide['id_slide']]['content'][$slide['id_lang']] = array(
-				'id_lang' => $slide['id_lang'],
-				'title_slide' => $slide['title_slide'],
-				'desc_slide' => $slide['desc_slide'],
-				'url_slide' => $slide['url_slide'],
-				'blank_slide' => $slide['blank_slide'],
-				'published_slide' => $slide['published_slide']
-			);
+				$arr[$slide['id_slide']]['content'][$slide['id_lang']] = [
+					'id_lang' => $slide['id_lang'],
+					'title_slide' => $slide['title_slide'],
+					'desc_slide' => $slide['desc_slide'],
+					'link_url_slide' => $slide['link_url_slide'],
+					'link_label_slide' => $slide['link_label_slide'],
+					'link_title_slide' => $slide['link_title_slide'],
+					'blank_slide' => $slide['blank_slide'],
+					'published_slide' => $slide['published_slide']
+				];
+			}
 		}
 		return $arr;
 	}
@@ -346,12 +344,12 @@ class plugins_slideshow_admin extends plugins_slideshow_db
         }
         return $newArr;
     }
+
 	/**
 	 * Affiche les pages de l'administration du plugin
 	 * @access public
 	 */
-	public function run()
-	{
+	public function run() {
 		if(isset($this->action)) {
 			switch ($this->action) {
 				case 'add':
@@ -366,10 +364,7 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 						}*/
 
 						if (!isset($this->slide['id'])) {
-							$this->add(array(
-								'type' => 'slide'
-							));
-
+							$this->add(['type' => 'slide']);
 							$lastSlide = $this->getItems('lastSlide', null,'one',false);
 							$this->slide['id'] = $lastSlide['id_slide'];
 							$notify = 'add_redirect';
@@ -377,19 +372,13 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 
 						if(isset($this->img) && !empty($this->img)) {
                             if(isset($this->slide['id']) && !empty($this->slide['id'])) {
-                                $setImgDirectory = $this->upload->dirImgUpload(
-                                    array_merge(
-                                        array('upload_root_dir' => 'upload/slideshow/' . $this->slide['id']),
-                                        array('imgBasePath' => true)
-                                    )
-                                );
+                                $setImgDirectory = $this->routingUrl->dirUpload('upload/slideshow/' . $this->slide['id'],true);
 
                                 if (file_exists($setImgDirectory)) {
                                     $setFiles = $this->finder->scanDir($setImgDirectory);
-                                    $clean = '';
                                     if ($setFiles != null) {
                                         foreach ($setFiles as $file) {
-                                            $clean .= $this->makeFiles->remove($setImgDirectory . $file);
+                                            $this->makeFiles->remove($setImgDirectory . $file);
                                         }
                                     }
                                 }
@@ -398,20 +387,20 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 							$img = $this->slide_image($img, $this->slide['id']);
 							$img = $img['file'];
 
-                            $this->upd(array(
-                                'type' => 'img',
-                                'data' => array(
-                                    'id' => $this->slide['id'],
-                                    'img' => $img
-                                )
-                            ));
+                            $this->upd([
+								'type' => 'img',
+								'data' => [
+									'id' => $this->slide['id'],
+									'img' => $img
+								]
+							]);
 						}
 
 						foreach ($this->slide['content'] as $lang => $slide) {
 							$slide['id_lang'] = $lang;
 							$slide['blank_slide'] = (!isset($slide['blank_slide']) ? 0 : 1);
 							$slide['published_slide'] = (!isset($slide['published_slide']) ? 0 : 1);
-							$slideLang = $this->getItems('slideContent',array('id' => $this->slide['id'],'id_lang' => $lang),'one',false);
+							$slideLang = $this->getItems('slideContent',['id' => $this->slide['id'],'id_lang' => $lang],'one',false);
 
 							if($slideLang) {
 								$slide['id'] = $slideLang['id_slide_content'];
@@ -420,10 +409,10 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 								$slide['id_slide'] = $this->slide['id'];
 							}
 
-							$config = array(
+							$config = [
 								'type' => 'slideContent',
 								'data' => $slide
-							);
+							];
 
 							$slideLang ? $this->upd($config) : $this->add($config);
 						}
@@ -469,12 +458,12 @@ class plugins_slideshow_admin extends plugins_slideshow_db
 			$this->getItems('slides',array('default_lang' => $defaultLanguage['id_lang']),'all');
 			$assign = array(
 				'id_slide',
-				'url_slide' => array('title' => 'name'),
+				'link_url_slide' => array('title' => 'name'),
 				'img_slide' => array('type' => 'bin', 'input' => null, 'class' => ''),
 				'title_slide' => array('title' => 'name'),
 				'desc_slide' => array('title' => 'name')
 			);
-			$this->data->getScheme(array('mc_slideshow', 'mc_slideshow_content'), array('id_slide', 'url_slide', 'img_slide','title_slide','desc_slide'), $assign);
+			$this->data->getScheme(array('mc_slideshow', 'mc_slideshow_content'), array('id_slide', 'link_url_slide', 'img_slide','title_slide','desc_slide'), $assign);
 			$this->template->display('index.tpl');
 		}
 	}
