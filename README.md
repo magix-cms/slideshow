@@ -32,6 +32,13 @@ et de se connecter à l'administration de celui-ci pour faire la mise à jour de
 
 ![screenshot-2018-2-27 slideshow magix cms admin 2](https://user-images.githubusercontent.com/356674/36722069-de51a4e2-1bac-11e8-89af-676489e62f3e.png)
 
+### Ajouter dans home.tpl la ligne suivante
+```smarty
+{block name="main:before"}
+    {include file="slideshow/home.tpl"}
+{/block}
+````
+
 <pre>
 
 This file is a plugin of Magix CMS.
