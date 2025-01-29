@@ -3,7 +3,7 @@
 {/if}
 {if is_array($slides) && $slides != null}
     {if $amp}
-        {$ref = $slides|end}
+        {$ref = end($slides)}
         <amp-carousel id="{$id_slider}" class="carousel2"
                       type="slides"
                       autoplay

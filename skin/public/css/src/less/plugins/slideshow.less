@@ -1,6 +1,8 @@
 //
 // Rules for home page
 //
+// Compiler options
+@import (reference) "mixins";
 #home {
 	main {
 		padding-bottom: 1rem;
@@ -20,7 +22,7 @@
 			opacity: 0.7;
 			height: 100%;
 			padding: 1rem;
-			color: @white;
+			color: var(--white);
 
 			.material-icons {
 				font-size: 4rem;
